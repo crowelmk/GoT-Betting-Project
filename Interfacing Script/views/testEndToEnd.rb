@@ -9,29 +9,9 @@ def func(client)
 	end
 end
 
-def add_house_bet(bet_option, client, email, bet_amount) 
-	houseID = 0
-	case bet_no
-	when "lannister"
-		houseID = 2
-	when "stark"
-		houseID = 9
-	when "watch"
-		houseID = 7
-	when "greyjoy"
-		houseID = 5
-	when "baratheon"
-		houseID = 6
-	end
-
-	statement = client.prepare("INSERT INTO HouseBet(HouseID, UserEmail, CashBet)
-						VALUES(?, ?, ?)")
-	statement.execute(houseID, email, bet_amount)
+def hi() 
+	puts "hi"
 end
-
-
-
-
 # begin
 #  # connect to the MySQL server
 #  dbh = DBI.connect("DBI:Mysql:testBase:127.0.0.1", 

@@ -41,16 +41,36 @@
       font-size: 46px;
     }
   </style>
+  <script src = "http://code.jquery.com/jquery-1.7.2.min.js"></script> 
 </head>
 
 <body>
-  <p class="gwd-p-34uu"><span class="gwd-span-17am"><% 
-  require_relative "testEndToEnd.rb"
-  result = client.query("SELECT * FROM infoToGet")
-  result.each do |val|
-    "#{val['id']}, #{val['name']}"
-  end
-   %></span><br>
+  <p class="gwd-p-34uu"><span class="gwd-span-17am">
+<!--   <%= 
+  # require_relative 'testEndToEnd.rb'
+  # func(client)
+  %> -->
+
+  <form action="/addLannister" method="post">
+    Email: <input type="text" name="email">
+    <br/>
+    Bet: <input type="text" name="bet">
+    </script>
+    <br/>
+    <input type="submit">
+  </form>
+
+<script>
+    var element = document.querySelector("form");
+    element.addEventListener("submit", function(event) {
+      event.preventDefault();
+      if (!($.isNumeric(element.bet))) {
+        alert('Improper Bet')
+      }
+    })
+  </script>
+
+</span><br>
     
   </p>
 </body>
