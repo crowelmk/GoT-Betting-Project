@@ -14,13 +14,11 @@ Tilt.register Tilt::ERBTemplate, 'html.erb'
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	page = Nokogiri :: HTML(open("index.html"))
-	page.class
+	erb :'test.html'
 end
 
 get '/houseBet' do
-	page = Nokogiri :: HTML(open("houseBet.html"))
-	page.class
+	erb :'houseBet.html'
 end
 
 get '/placeHouseBet/:betName' do
@@ -37,8 +35,7 @@ post '/addHouseBet' do
 end
 
 get '/deathBet' do
-	page = Nokogiri :: HTML(open("deathBet.html"))
-	page.class
+	erb :'deathBet.html'
 end
 
 get '/placeDeathBet/:betName' do
@@ -55,8 +52,7 @@ post '/addDeathBet' do
 end
 
 get '/resurrectBet' do
-	page = Nokogiri :: HTML(open("resBet.html"))
-	page.class
+	erb :'redBet.html'
 end
 
 get '/placeResurrectBet/:betName' do

@@ -1,52 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <title>Home</title>
-  <meta name="generator" content="Google Web Designer 1.6.0.0429">
-  <style type="text/css" id="gwd-text-style">
-    p {
-      margin: 0px;
-    }
-    h1 {
-      margin: 0px;
-    }
-    h2 {
-      margin: 0px;
-    }
-    h3 {
-      margin: 0px;
-    }
-  </style>
-  <style type="text/css">
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0px;
-    }
-    body {
-      transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-      transform-style: preserve-3d;
-      background-color: transparent;
-    }
-    .gwd-p-34uu {
-      position: absolute;
-      width: 639px;
-      height: 133px;
-      left: 296px;
-      top: 209px;
-    }
-    .gwd-span-17am {
-      font-size: 46px;
-    }
-  </style>
+<meta charset="utf-8">
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+
+
+#banner{
+	display: block;	
+}
+
+.betbutton{
+	position: relative;
+	top: 0px;
+	float: right;
+}
+
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<title>test</title>
 </head>
+</html>
 
+
+<html>
+<img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
 <body>
-  <p class="gwd-p-34uu"><span class="gwd-span-17am">Nothing to see here</span><br>
-    
-  </p>
-</body>
+<ul>
+  <li><a class="active" href="#home">Home</a></li>
+  <li><a href="#history">History</a></li>
+  <li><a href="#statistics">Statistics</a></li>
+  <li style="float:right"><a href="#about">About</a></li>
+</ul>
+<br>
+<div id = "content">
+  <script>
+  function changeToHouseOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/houseBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Death<button type="button" onclick="changeToHouseOptions()" class="betbutton">Show Options</button></homecontent>
+  <br>
+  <script>
+  function changeToDeathOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/deathBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Victory<button type="button" onclick="changeToDeathOptions()" class="betbutton">Show Options</button></homecontent>
+  <br>
+  <script>
+  function changeToResurrectOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/resurrectBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Re surre ct<button type="button" onclick="changeToResurrectOptions()" class="betbutton">Show Options</button></homecontent>
+</div>
 
+</body>
 </html>
