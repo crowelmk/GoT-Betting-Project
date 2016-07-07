@@ -112,7 +112,7 @@ body {
 </head>
 
 <body>
-  <p class="gwd-p-34uu" id="title"><span class="gwd-span-17am">Select a bet!</span><br>
+  <p class="gwd-p-34uu" id="title"><span class="gwd-span-17am">Which faction will wrest control of the Iron Throne?</span><br>
     
   </p>
 
@@ -120,21 +120,43 @@ body {
   <img src="small-button.png" class="gwd-img-1c0j" id="button1">
   <img src="small-button.png" class="gwd-img-1c0j gwd-img-1rgn" id="button2">
   <img src="small-button.png" class="gwd-img-1c0j gwd-img-2rgn" id="button3">
-  <span class="gwd-span-10oj" id="text1">&nbsp;Winning House Bet</span>
-  <span class="gwd-span-pd46" id="text2">&nbsp;Murder Bet</span>
-  <span class="gwd-span-pd47" id="text3">&nbsp;Resurrect Bet</span>
+  <img src="small-button.png" class="gwd-img-1c0j gwd-img-3rgn" id="button4">
+  <img src="small-button.png" class="gwd-img-1c0j gwd-img-4rgn" id="button5">
+  <span class="gwd-span-10oj" id="text1">&nbsp;Lannister</span>
+  <span class="gwd-span-pd46" id="text2">&nbsp;Stark</span>
+  <span class="gwd-span-pd47" id="text3">&nbsp;Night's Watch</span>
+  <span class="gwd-span-pd48" id="text4">&nbsp;Baratheon</span>
+  <span class="gwd-span-pd49" id="text5">&nbsp;Greyjoy</span>
   </div>
 
   <script type="text/javascript" gwd-events="handlers">
       window.gwd = window.gwd || {};
       gwd.pressButton1 = function(event) {
-        window.location.replace("houseBet");
+        // alert("button1 pressed");
+        var betName = "lannister";
+        window.location.replace("placeHouseBet/lannister");
       };
       gwd.pressButton2 = function(event) {
-        window.location.replace("deathBet");
+      //   var xhttp = new XMLHttpRequest();
+      //   var title = document.getElementById('content');
+      //   xhttp.onreadystatechange = function() {
+      //     if(xhttp.readyState == XMLHttpRequest.DONE && xhttp.status == 200) {
+      //         $('content').replaceWith(xhttp.responseText);
+      //     }
+      //   }
+      //   xhttp.open("POST", "/about", true);
+      //   xhttp.send();
+        window.location.replace("placeHouseBet/stark");
       };
       gwd.pressButton3 = function(event) {
-        window.location.replace("resurrectBet");
+        // $('body').load("/about");
+        window.location.replace("placeHouseBet/watch");
+      };
+      gwd.pressButton4 = function(event) {
+        window.location.replace("placeHouseBet/baratheon");
+      };
+      gwd.pressButton5 = function(event) {
+        window.location.replace("placeHouseBet/greyjoy")
       };
     </script>
     <script type="text/javascript" gwd-events="registration">
@@ -144,11 +166,15 @@ body {
         gwd.actions.events.addHandler('button1', 'click', gwd.pressButton1, false);
         gwd.actions.events.addHandler('button2', 'click', gwd.pressButton2, false);
         gwd.actions.events.addHandler('button3', 'click', gwd.pressButton3, false);
+        gwd.actions.events.addHandler('button4', 'click', gwd.pressButton4, false);
+        gwd.actions.events.addHandler('button5', 'click', gwd.pressButton5, false);
       };
       gwd.actions.events.deregisterEventHandlers = function(event) {
         gwd.actions.events.removeHandler('button1', 'click', gwd.pressButton1, false);
         gwd.actions.events.removeHandler('button2', 'click', gwd.pressButton2, false);
         gwd.actions.events.removeHandler('button3', 'click', gwd.pressButton3, false);
+        gwd.actions.events.removeHandler('button4', 'click', gwd.pressButton4, false);
+        gwd.actions.events.removeHandler('button5', 'click', gwd.pressButton5, false);
       };
       document.addEventListener("DOMContentLoaded", gwd.actions.events.registerEventHandlers);
       document.addEventListener("unload", gwd.actions.events.deregisterEventHandlers);

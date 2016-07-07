@@ -1,6 +1,17 @@
 require 'csv'
 require 'Mysql2'
 require 'set'
+require 'optparse'
+
+
+mode= nil
+OptionParser.new do |opts|
+  opts.on("-m MODE", "--mode MODE", "MODE of import to perform") do |val|
+    mode = val;
+  end
+end.parse(ARGV)
+raise "You must specify whether to 'create' database or 'add' to database (-m)" if mode.nil?
+
 
 def remove_bad_char(inputString)
 	if(inputString != nil)
@@ -315,13 +326,20 @@ client = Mysql2::Client.new(:host => "192.168.91.2",:username => "testuser", :pa
 
 # Create the database and associated tables/views
 databaseName = "BettingBase"
-create_database(client, databaseName)
-client.query("USE #{databaseName}")
-drop_tables(client)
-create_tables_and_views(client)
+if mode == "create" 
+	create_database(client, databaseName)
+	client.query("USE #{databaseName}")
+	drop_tables(client)
+	create_tables_and_views(client)
+	# Populate the database
+	populate_tables(client, people, stats, battles)
+else # How do this considering populate dumps it in special way
+	client.query("USE #{databaseName}")
+end
 
-# Populate the database
-populate_tables(client, people, stats, battles)
+
+
+
 
 
 

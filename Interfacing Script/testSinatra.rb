@@ -16,67 +16,53 @@ get '/' do
 	erb :'index.html'
 end
 
-get '/lannister' do
-	erb :'lannisterBet.html', :locals => {'client' => @@client} 
+get '/houseBet' do
+	erb :'winHouseBet.html'
 end
 
-get '/stark' do
-	erb :'starkBet.html', :locals => {'client' => @@client} 
+get '/placeHouseBet/:betName' do
+	erb :'takeBetInput.html', :locals => {'betName' => params[:betName]}
 end
 
-get '/watch' do
-	erb :'nightsWatchBet.html', :locals => {'client' => @@client} 
-end
-
-get '/greyjoy' do
-	erb :'greyjoylannisterBet.html', :locals => {'client' => @@client} 
-end
-
-get '/baratheon' do
-	erb :'baratheonBet.html', :locals => {'client' => @@client} 
-end
-
-post '/addLannister' do
+post '/addHouseBet' do
 	require_relative 'testEndToEnd.rb'
+	betChoice = params[:betName]
 	email = params[:email]
 	bet = params[:bet]
-	puts "Email: #{email}; Bet: #{bet}"
-	# add_house_bet("lannister", @@client, email, bet)
-    # redirect '/'
+	add_house_bet(betChoice, @@client, email, bet)
+    redirect '/'
 end
 
-post '/addStark' do
-	require_relative 'testEndToEnd.rb'
-	email = params[:email]
-	bet = params[:bet]
-	puts "Email: #{email}; Bet: #{bet}"
-	# add_house_bet("stark", @@client, email, bet)
-    # redirect '/'
+get '/deathBet' do
+	erb :'winDeathBet.html'
 end
 
-post '/addBaratheon' do
-	require_relative 'testEndToEnd.rb'
-	email = params[:email]
-	bet = params[:bet]
-	puts "Email: #{email}; Bet: #{bet}"
-	# add_house_bet("baratheon", @@client, email, bet)
-    # redirect '/'
+get '/placeDeathBet/:betName' do
+	erb :'takeDeathBetInput.html', :locals => {'betName' => params[:betName]}
 end
 
-post '/addGreyjoy' do
+post '/addDeathBet' do
 	require_relative 'testEndToEnd.rb'
+	betChoice = params[:betName]
 	email = params[:email]
 	bet = params[:bet]
-	puts "Email: #{email}; Bet: #{bet}"
-	# add_house_bet("greyjoy", @@client, email, bet)
-    # redirect '/'
+	add_death_bet(betChoice, @@client, email, bet)
+    redirect '/'
 end
 
-post '/addWatch' do
+get '/resurrectBet' do
+	erb :'winResurrectBet.html'
+end
+
+get '/placeResurrectBet/:betName' do
+	erb :'takeResurrectBetInput.html', :locals => {'betName' => params[:betName]}
+end
+
+post '/addResurrectBet' do
 	require_relative 'testEndToEnd.rb'
+	betChoice = params[:betName]
 	email = params[:email]
 	bet = params[:bet]
-	puts "Email: #{email}; Bet: #{bet}"
-	# add_house_bet("watch", @@client, email, bet)
-    # redirect '/'
+	add_resurrect_bet(betChoice, @@client, email, bet)
+    redirect '/'
 end

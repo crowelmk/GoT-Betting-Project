@@ -46,33 +46,28 @@
 
 <body>
   <p class="gwd-p-34uu"><span class="gwd-span-17am">
-<!--   <%= 
-  # require_relative 'testEndToEnd.rb'
-  # func(client)
-  %> -->
 
-  <form name = "add" action="/addLannister" method="post">
+  <form name = "add" action="/addDeathBet" method="post">
     Email: <input type="text" name="email">
     <br/>
     Bet: <input type="text" name="bet">
-    </script>
     <br/>
+    <input type = "hidden" name = "betName" value = <%= betName %>>
     <input type="submit">
   </form>
 
 <script>
     var element = document.querySelector("form");
     element.addEventListener("submit", function(event) {
-      var email = document.forms["add"]["email"].value
-      var bet = document.forms["add"]["bet"].value
-      var emailRegex = new RegExp(".+@.+\..+")
-      var badBetRegex = new RegExp("\s+")
+      var email = document.forms["add"]["email"].value;
+      var bet = document.forms["add"]["bet"].value;
+      var emailRegex = new RegExp(".+@.+\..+");
+      var badBetRegex = new RegExp("\s+");
 
       if(!email.match(emailRegex)) {
         event.preventDefault();
         alert('Email must be of form blah@blah.com, try again.');
       }
-      
       if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
         event.preventDefault();
         alert('Bet must be a dollar amount, try again.');

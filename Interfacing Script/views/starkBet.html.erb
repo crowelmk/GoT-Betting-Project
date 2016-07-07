@@ -41,6 +41,7 @@
       font-size: 46px;
     }
   </style>
+  <script src = "http://code.jquery.com/jquery-1.7.2.min.js"></script> 
 </head>
 
 <body>
@@ -49,14 +50,35 @@
   # require_relative 'testEndToEnd.rb'
   # func(client)
   %> -->
-  
-  <form action="/addStark" method="post">
+
+  <form name = "add" action="/addStark" method="post">
     Email: <input type="text" name="email">
     <br/>
-    Base: <input type="text" name="bet">
+    Bet: <input type="text" name="bet">
+    </script>
     <br/>
     <input type="submit">
   </form>
+
+<script>
+    var element = document.querySelector("form");
+    element.addEventListener("submit", function(event) {
+      var email = document.forms["add"]["email"].value
+      var bet = document.forms["add"]["bet"].value
+      var emailRegex = new RegExp(".+@.+\..+")
+      var badBetRegex = new RegExp("\s+")
+
+      if(!email.match(emailRegex)) {
+        event.preventDefault();
+        alert('Email must be of form blah@blah.com, try again.');
+      }
+
+      if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+        event.preventDefault();
+        alert('Bet must be a dollar amount, try again.');
+      }
+    })
+  </script>
 
 </span><br>
     

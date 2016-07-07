@@ -11,7 +11,7 @@ end
 
 def add_house_bet(bet_option, client, email, bet_amount) 
 	houseID = 0
-	case bet_no
+	case bet_option
 	when "lannister"
 		houseID = 2
 	when "stark"
@@ -29,7 +29,45 @@ def add_house_bet(bet_option, client, email, bet_amount)
 	statement.execute(houseID, email, bet_amount)
 end
 
+def add_death_bet(bet_option, client, email, bet_amount) 
+	charID = 0
+	case bet_option
+	when "Arya"
+		charID = 48
+	when "Jon"
+		charID = 381
+	when "Sansa"
+		charID = 688
+	when "Ramsay"
+		charID = 628
+	when "Theon"
+		charID = 742
+	end
+	puts "#{charID}, #{bet_option}"
+	statement = client.prepare("INSERT INTO MurderBet(CharID, UserEmail, CashBet)
+						VALUES(?, ?, ?)")
+	statement.execute(charID, email, bet_amount)
+end
 
+def add_resurrect_bet(bet_option, client, email, bet_amount) 
+	charID = 0
+	case bet_option
+	when "Ned"
+		charID = 201
+	when "Joffrey"
+		charID = 383
+	when "Khal"
+		charID = 191
+	when "Viserys"
+		charID = 797
+	when "Robb"
+		charID = 651
+	end
+
+	statement = client.prepare("INSERT INTO RFDBet(CharID, UserEmail, CashBet)
+						VALUES(?, ?, ?)")
+	statement.execute(charID, email, bet_amount)
+end
 
 
 # begin
