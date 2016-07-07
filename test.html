@@ -53,7 +53,7 @@ body {
 
 .betbutton{
 	position: relative;
-	top: 75px;
+	top: 0px;
 	float: right;
 }
 
@@ -92,11 +92,47 @@ homecontent{
 </ul>
 <br>
 <div id = "content">
-  <homecontent>Death<button type="button" onclick="alert('Hello world!')" class="betbutton">Make Bet</button></homecontent>
+  <script>
+  function changeToHouseOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/houseBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Death<button type="button" onclick="changeToHouseOptions()" class="betbutton">Show Options</button></homecontent>
   <br>
-  <homecontent>Victory<button type="button" onclick="alert('Hello world!')" class="betbutton">Make Bet</button></homecontent>
+  <script>
+  function changeToDeathOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/deathBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Victory<button type="button" onclick="changeToDeathOptions()" class="betbutton">Show Options</button></homecontent>
   <br>
-  <homecontent>Re surre ct<button type="button" onclick="alert('Hello world!')" class="betbutton">Make Bet</button></homecontent>
+  <script>
+  function changeToResurrectOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('content').replaceWith(xhttp.responseText);
+		}
+	request.open("POST", "/resurrectBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Re surre ct<button type="button" onclick="changeToResurrectOptions()" class="betbutton">Show Options</button></homecontent>
 </div>
 
 </body>

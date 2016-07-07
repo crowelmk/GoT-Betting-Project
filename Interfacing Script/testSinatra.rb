@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 require 'sinatra'
 require 'mysql2'
+require 'nokogiri'
 require 'erb'
 Tilt.register Tilt::ERBTemplate, 'html.erb'
 
@@ -13,11 +14,13 @@ Tilt.register Tilt::ERBTemplate, 'html.erb'
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	erb :'index.html'
+	page = Nokogiri :: HTML(open("index.html"))
+	page.class
 end
 
 get '/houseBet' do
-	erb :'winHouseBet.html'
+	page = Nokogiri :: HTML(open("houseBet.html"))
+	page.class
 end
 
 get '/placeHouseBet/:betName' do
@@ -34,7 +37,8 @@ post '/addHouseBet' do
 end
 
 get '/deathBet' do
-	erb :'winDeathBet.html'
+	page = Nokogiri :: HTML(open("deathBet.html"))
+	page.class
 end
 
 get '/placeDeathBet/:betName' do
@@ -51,7 +55,8 @@ post '/addDeathBet' do
 end
 
 get '/resurrectBet' do
-	erb :'winResurrectBet.html'
+	page = Nokogiri :: HTML(open("resBet.html"))
+	page.class
 end
 
 get '/placeResurrectBet/:betName' do
