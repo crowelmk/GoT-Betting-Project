@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 require 'sinatra'
 require 'mysql2'
-require 'nokogiri'
 require 'erb'
 Tilt.register Tilt::ERBTemplate, 'html.erb'
 
@@ -52,7 +51,7 @@ post '/addDeathBet' do
 end
 
 get '/resurrectBet' do
-	erb :'redBet.html'
+	erb :'resBet.html'
 end
 
 get '/placeResurrectBet/:betName' do

@@ -32,15 +32,15 @@ end
 def add_death_bet(bet_option, client, email, bet_amount) 
 	charID = 0
 	case bet_option
-	when "Arya"
+	when "aryastark"
 		charID = 48
-	when "Jon"
+	when "jonsnow"
 		charID = 381
-	when "Sansa"
+	when "sansastark"
 		charID = 688
-	when "Ramsay"
+	when "ramsaybolton"
 		charID = 628
-	when "Theon"
+	when "theongreyjoy"
 		charID = 742
 	end
 	puts "#{charID}, #{bet_option}"
@@ -52,15 +52,15 @@ end
 def add_resurrect_bet(bet_option, client, email, bet_amount) 
 	charID = 0
 	case bet_option
-	when "Ned"
+	when "nedstark"
 		charID = 201
-	when "Joffrey"
+	when "joffreybaratheon"
 		charID = 383
-	when "Khal"
+	when "khaldrogo"
 		charID = 191
-	when "Viserys"
+	when "viserystargaryen"
 		charID = 797
-	when "Robb"
+	when "robbstark"
 		charID = 651
 	end
 

@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+#banner{
+	display: block;	
+}
+
+.betbutton{
+	position: relative;
+	top: 0px;
+	float: right;
+}
+
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<script src = "http://code.jquery.com/jquery-1.7.2.min.js"></script> 
+<title>test</title>
+</head>
+</html>
+
+
+<html>
+<body>
+<br>
+<div id = "content">
+  <script>
+  function changeToDeathOptions() {
+	var request = new XMLHttpRequest();
+  	var content = $('#content').clone();
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('#content').replaceWith(request.responseText);
+		}
+	}
+	request.open("GET", "/deathBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Death<button type="button" onclick="changeToDeathOptions()" class="betbutton">Show Options</button></homecontent>
+  <br>
+  <script>
+  function changeToHouseOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('#content').replaceWith(request.responseText);
+		}
+	}
+	request.open("GET", "/houseBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Victory<button type="button" onclick="changeToHouseOptions()" class="betbutton">Show Options</button></homecontent>
+  <br>
+  <script>
+  function changeToResurrectOptions() {
+	var request = new XMLHttpRequest();
+  	var content = document.getElementById('content');
+	request.onreadystatechange = function() {
+		if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+			$('#content').replaceWith(request.responseText);
+		}
+	}
+	request.open("GET", "/resurrectBet", true);
+	request.send();
+  }
+  </script>
+  <homecontent>Re surre ct<button type="button" onclick="changeToResurrectOptions()" class="betbutton">Show Options</button></homecontent>
+</div>
+
+</body>
+</html>
