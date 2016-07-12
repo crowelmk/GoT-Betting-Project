@@ -96,6 +96,16 @@ homecontent{
 <canvas id="myChart" width="400" height="400"></canvas>
 <script>
 var ctx = document.getElementById("myChart");
+var result = <%=client.query("SELECT HouseName, COUNT(*) AS Wins
+                              FROM House AS h, CombatLog AS c
+                              WHERE h.HouseID = c.HouseID AND c.Result = 'win'
+                              GROUP BY h.HouseName")%>;
+
+for (var row in result) {
+    console.log(row['HouseName'] + ", " + row['Wins']);
+}
+
+
 var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -123,7 +133,6 @@ var myChart = new Chart(ctx, {
         }]
     },
     options: {
-
         scales: {
             yAxes: [{
                 ticks: {
