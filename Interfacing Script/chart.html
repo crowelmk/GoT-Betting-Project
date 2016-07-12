@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+	<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
+<meta charset="utf-8">
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+
+
+#banner{
+	display: block;	
+}
+
+.betbutton{
+	position: relative;
+	top: 0px;
+	float: right;
+}
+
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<title>test</title>
+</head>
+</html>
+
+
+<html>
+<img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a class="active" href="#home">Home</a></li>
+  <li><a href="#history">History</a></li>
+  <li><a href="#statistics">Statistics</a></li>
+  <li style="float:right"><a href="#about">About</a></li>
+</ul>
+<br>
+
+<canvas id="myChart" width="400" height="400"></canvas>
+<script>
+var ctx = document.getElementById("myChart");
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+        datasets: [{
+            label: '# of Votes',
+            data: [12, 19, 3, 5, 2, 3],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
+        }
+    }
+});
+</script>
+	
+
+</body>
+</html>
