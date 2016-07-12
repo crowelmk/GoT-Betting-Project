@@ -2,11 +2,21 @@
 require 'mysql2'
 
 #connect to mysql database
-def func(client)
-	result = client.query("SELECT * FROM infoToGet")
+def obtainCombatChart(client)
+	result = client.query("SELECT HouseName, COUNT(*) AS Wins
+                               FROM House AS h, CombatLog AS c
+                               WHERE h.HouseID = c.HouseID AND c.Result = 'win'
+                               GROUP BY h.HouseName")
+	toReturn = [];
+	names = [];
+	wins = [];
 	result.each do |val|
-		return "#{val['id']}, #{val['name']}"
+		names << val[0]
+		wins << val[1]
 	end
+	toReturn << names
+	toReturn << wins
+	return toReturn
 end
 
 def add_house_bet(bet_option, client, email, bet_amount) 
