@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(../srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+#banner{
+	display: block;	
+}
+
+#form{
+	align-self: center;
+	color: white;
+		
+}
+
+.betbutton{
+	position: relative;
+	top: 75px;
+	float: right;
+}
+</style>
+<title>test</title>
+</head>
+</html>
+
+
+<html>
+<img src="../srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="#history">History</a></li>
+  <li><a href="#statistics">Statistics</a></li>
+  <li style="float:right"><a href="#about">About</a></li>
+</ul>
+<br>
+<div id = "content">
+  <form name = "add" action="/addBet" method="post" id = "form">
+    Email: <input type="text" name="email">
+    <br>
+    Bet: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="bet">
+    <br>
+    <input type = "hidden" name = "betCategory" value = <%= betCategory %> >
+    <input type = "hidden" name = "betChoice" value = <%= betChoice %> >
+    <input type="submit">
+  </form>
+<script>
+    var element = document.querySelector("form");
+    element.addEventListener("submit", function(event) {
+      var email = document.forms["add"]["email"].value;
+      var bet = document.forms["add"]["bet"].value;
+      var emailRegex = new RegExp(".+@.+\..+");
+      var badBetRegex = new RegExp("\s+");
+
+      if(!email.match(emailRegex)) {
+        event.preventDefault();
+        alert('Email must be of form blah@blah.com, try again.');
+      }
+      if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+        event.preventDefault();
+        alert('Bet must be a dollar amount, try again.');
+      }
+    })
+  </script>
+</div>
+
+</body>
+</html>

@@ -20,49 +20,35 @@ get '/houseBet' do
 	erb :'houseBet.html'
 end
 
-get '/placeHouseBet/:betName' do
-	erb :'takeBetInput.html', :locals => {'betName' => params[:betName]}
-end
-
-post '/addHouseBet' do
-	require_relative 'testEndToEnd.rb'
-	betChoice = params[:betName]
-	email = params[:email]
-	bet = params[:bet]
-	add_house_bet(betChoice, @@client, email, bet)
-    redirect '/'
-end
-
 get '/deathBet' do
 	erb :'deathBet.html'
-end
-
-get '/placeDeathBet/:betName' do
-	erb :'takeDeathBetInput.html', :locals => {'betName' => params[:betName]}
-end
-
-post '/addDeathBet' do
-	require_relative 'testEndToEnd.rb'
-	betChoice = params[:betName]
-	email = params[:email]
-	bet = params[:bet]
-	add_death_bet(betChoice, @@client, email, bet)
-    redirect '/'
 end
 
 get '/resurrectBet' do
 	erb :'resBet.html'
 end
 
-get '/placeResurrectBet/:betName' do
-	erb :'takeResurrectBetInput.html', :locals => {'betName' => params[:betName]}
+get '/placeBet/:betCategory&:betChoice' do
+	erb :'betInput.html', :locals => {'betCategory' => params[:betCategory], 'betChoice' => params[:betChoice]}
 end
 
-post '/addResurrectBet' do
+post '/addBet' do
 	require_relative 'testEndToEnd.rb'
-	betChoice = params[:betName]
+	betCategory = params[:betCategory]
+	betChoice = params[:betChoice]
 	email = params[:email]
 	bet = params[:bet]
-	add_resurrect_bet(betChoice, @@client, email, bet)
-    redirect '/'
+
+	case betCategory
+	when "house"
+		add_house_bet(betChoice, @@client, email, bet)
+	when "death"
+		add_death_bet(betChoice, @@client, email, bet)
+	when "resurrect"
+		add_resurrect_bet(betChoice, @@client, email, bet)
+	else
+		puts "Invalid bet!"
+	end
+
+	redirect '/'
 end
