@@ -13,7 +13,8 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	erb :'chart.html', :locals => {'client' => @@client}
+	erb :'home.html'
+	# erb :'chart.html', :locals => {'client' => @@client}
 end
 
 get '/houseBet' do

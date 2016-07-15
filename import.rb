@@ -25,9 +25,10 @@ def create_database(client, dbName)
 end
 
 def drop_tables(client)
-	client.query("DROP TABLE IF EXISTS MurderBet")
+	client.query("DROP TABLE IF EXISTS DeathBet")
 	client.query("DROP TABLE IF EXISTS RFDBet")
 	client.query("DROP TABLE IF EXISTS HouseBet")
+	client.query("DROP TABLE IF EXISTS Bet")
 	client.query("DROP TABLE IF EXISTS CombatLog")
 	client.query("DROP TABLE IF EXISTS Death")
 	client.query("DROP TABLE IF EXISTS Person")
@@ -36,7 +37,6 @@ def drop_tables(client)
 end
 
 def create_tables_and_views(client)
-
 	# Tables
 
 	# Note: House has multiple derived attributes that are expressed in a view on House involving both
@@ -47,8 +47,9 @@ def create_tables_and_views(client)
 
 	client.query("CREATE TABLE IF NOT EXISTS Person (
 					CharID INT PRIMARY KEY, 
+					IsAlive SMALLINT NOT NULL,
 					HouseID INT NOT NULL, 
-					Name varchar(50) NOT NULL, 
+					Name varchar(80) NOT NULL, 
 					Gender INT NOT NULL, 
 					Title varchar(60), 
 					IntroBookNo INT, 
@@ -79,30 +80,35 @@ def create_tables_and_views(client)
 					FOREIGN KEY(HouseID) REFERENCES House(HouseID), 
 					FOREIGN KEY(BattleID) REFERENCES Battle(BattleID))")
 
-	client.query("CREATE TABLE IF NOT EXISTS MurderBet (
-					MurderBetID INT AUTO_INCREMENT PRIMARY KEY, 
-					CharID INT, 
-					UserEmail VARCHAR(60), 
-					CashBet DECIMAL(10, 2), 
+	client.query("CREATE TABLE IF NOT EXISTS Bet (
+					BetID INT AUTO_INCREMENT PRIMARY KEY,
+					BetType VARCHAR(60) NOT NULL,
+					UserEmail VARCHAR(100) NOT NULL,
+					BetAmount DECIMAL(10, 2) NOT NULL,
+					Result VARCHAR(30),
+					CHECK(CashBet > 1.00))")
+
+	client.query("CREATE TABLE IF NOT EXISTS DeathBet (
+					BetID INT NOT NULL, 
+					CharID INT NOT NULL, 
+					FOREIGN KEY(BetID) REFERENCES Bet(BetID),
 					FOREIGN KEY(CharID) REFERENCES Person(CharID),
-					CHECK(CashBet > 5.00))")
+					PRIMARY KEY(BetID))")
 
 	# RFD = Resurrect from death
 	client.query("CREATE TABLE IF NOT EXISTS RFDBet (
-					RFDBetID INT AUTO_INCREMENT PRIMARY KEY, 
-					CharID INT, 
-					UserEmail VARCHAR(60), 
-					CashBet DECIMAL(10, 2), 
+					BetID INT NOT NULL, 
+					CharID INT NOT NULL, 
+					FOREIGN KEY(BetID) REFERENCES Bet(BetID),
 					FOREIGN KEY(CharID) REFERENCES Death(CharID),
-					CHECK(CashBet > 5.00))")
+					PRIMARY KEY(BetID))")
 
 	client.query("CREATE TABLE IF NOT EXISTS HouseBet (
-					HouseBetID INT AUTO_INCREMENT PRIMARY KEY, 
+					BetID INT NOT NULL, 
 					HouseID INT NOT NULL, 
-					UserEmail VARCHAR(60) NOT NULL, 
-					CashBet DECIMAL(10, 2) NOT NULL,  
+					FOREIGN KEY(BetID) REFERENCES Bet(BetID),
 					FOREIGN KEY(HouseID) REFERENCES House(HouseID),
-					CHECK(CashBet > 5.00))")
+					PRIMARY KEY(BetID))")
 
 	# Views
 	client.query("CREATE OR REPLACE VIEW HouseMembership (
@@ -211,9 +217,11 @@ def populate_tables(client, people, stats, battles)
 				houseName = houseNameSplit[1]
 			end
 
+			personIsAlive = person[2] != nil ? 0 : 1
+
 			houseId = houseIdMapping.fetch(houseName)
-	        client.query("INSERT INTO Person(CharID, HouseID, Name, Gender, Title, IntroBookNo) 
-	        VALUES(#{currentIdValue}, #{houseId}, '#{name}', #{gender}, '#{title}', #{introBookNo})")
+	        client.query("INSERT INTO Person(CharID, IsAlive, HouseID, Name, Gender, Title, IntroBookNo) 
+	        VALUES(#{currentIdValue}, #{personIsAlive}, #{houseId}, '#{name}', #{gender}, '#{title}', #{introBookNo})")
 
 			if(person[2] != nil) # person is dead, record their death
 				# In our imported data, no person has died twice. However, since characters
@@ -316,6 +324,45 @@ def populate_tables(client, people, stats, battles)
 	# Leave bet tables empty, as no bets have been made yet
 end
 
+def create_stored_procedures(client)
+	client.query("USE testBase")
+	client.query(
+	"DROP procedure IF EXISTS `insert_bet`;
+DELIMITER $$
+USE `testBase`$$
+CREATE PROCEDURE `insert_bet`(
+	    IN betType varchar(30),
+	    IN email varchar(100),
+	    IN bet decimal(10, 2),
+	    IN optionID int,
+	    OUT output int)
+	BEGIN
+		DECLARE currentBetID INT;
+
+		INSERT INTO Bet (BetType, UserEmail, BetAmount, Result) 
+	    VALUES (betType, email, bet, 'pending');
+	    
+	    SET currentBetID = LAST_INSERT_ID();
+	    
+		IF(betType = 'house') THEN
+			INSERT INTO HouseBet
+	        VALUES (currentBetID, optionID);
+		ELSEIF(betType = 'death') THEN
+			INSERT INTO DeathBet
+	        VALUES (currentBetID, optionID);
+		ELSEIF(betType = 'resurrect') THEN
+			INSERT INTO RFDBet
+	        VALUES(currentBetID, optionID);
+		ELSE
+			SET output = -1;
+	    END IF;
+	    
+		SET output = 0;
+	END$$
+
+DELIMITER ;")
+end
+
 # Parse the data tables
 people = CSV.read('character.csv')
 stats = CSV.read('prediction.csv')
@@ -325,27 +372,15 @@ battles = CSV.read('battles.csv')
 client = Mysql2::Client.new(:host => "192.168.91.2",:username => "testuser", :password => "mysqltest")
 
 # Create the database and associated tables/views
-databaseName = "BettingBase"
+databaseName = "testBase"
 if mode == "create" 
 	create_database(client, databaseName)
 	client.query("USE #{databaseName}")
 	drop_tables(client)
 	create_tables_and_views(client)
+	create_stored_procedures(client)
 	# Populate the database
-	populate_tables(client, people, stats, battles)
+	populate_tables(client, people, stats, battles)\
 else # How do this considering populate dumps it in special way
 	client.query("USE #{databaseName}")
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
