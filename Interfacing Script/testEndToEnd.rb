@@ -2,11 +2,21 @@
 require 'mysql2'
 
 #connect to mysql database
-def func(client)
-	result = client.query("SELECT * FROM infoToGet")
+def obtainCombatChart(client)
+	result = client.query("SELECT HouseName, COUNT(*) AS Wins
+                               FROM House AS h, CombatLog AS c
+                               WHERE h.HouseID = c.HouseID AND c.Result = 'win'
+                               GROUP BY h.HouseName")
+	toReturn = [];
+	names = [];
+	wins = [];
 	result.each do |val|
-		return "#{val['id']}, #{val['name']}"
+		names << val[0]
+		wins << val[1]
 	end
+	toReturn << names
+	toReturn << wins
+	return toReturn
 end
 
 def add_house_bet(bet_option, client, email, bet_amount) 
@@ -24,9 +34,10 @@ def add_house_bet(bet_option, client, email, bet_amount)
 		houseID = 6
 	end
 
-	statement = client.prepare("INSERT INTO HouseBet(HouseID, UserEmail, CashBet)
-						VALUES(?, ?, ?)")
-	statement.execute(houseID, email, bet_amount)
+
+	statement = client.prepare("CALL insert_bet('house', ?, ?, ?, @out_value)")
+
+	statement.execute(email, bet_amount, houseID)
 end
 
 def add_death_bet(bet_option, client, email, bet_amount) 
@@ -43,10 +54,10 @@ def add_death_bet(bet_option, client, email, bet_amount)
 	when "theongreyjoy"
 		charID = 742
 	end
-	puts "#{charID}, #{bet_option}"
-	statement = client.prepare("INSERT INTO MurderBet(CharID, UserEmail, CashBet)
-						VALUES(?, ?, ?)")
-	statement.execute(charID, email, bet_amount)
+
+	statement = client.prepare("CALL insert_bet('death', ?, ?, ?, @out_value)")
+
+	statement.execute(email, bet_amount, charID)
 end
 
 def add_resurrect_bet(bet_option, client, email, bet_amount) 
@@ -64,9 +75,9 @@ def add_resurrect_bet(bet_option, client, email, bet_amount)
 		charID = 651
 	end
 
-	statement = client.prepare("INSERT INTO RFDBet(CharID, UserEmail, CashBet)
-						VALUES(?, ?, ?)")
-	statement.execute(charID, email, bet_amount)
+	statement = client.prepare("CALL insert_bet('resurrect', ?, ?, ?, @out_value)")
+
+	statement.execute(email, bet_amount, charID)
 end
 
 
