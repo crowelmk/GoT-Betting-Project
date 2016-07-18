@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+	<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
+<meta charset="utf-8">
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+tr:hover{background-color: yellow;}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+
+
+#banner{
+	display: block;	
+}
+
+.betbutton{
+	position: relative;
+	top: 0px;
+	float: right;
+}
+
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<title>test</title>
+</head>
+</html>
+
+
+<html>
+<img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a class="active" href="#home">Home</a></li>
+  <li><a href="#history">History</a></li>
+  <li><a href="#statistics">Statistics</a></li>
+  <li style="float:right"><a href="#about">About</a></li>
+</ul>
+<br>
+
+<canvas id="myChart" width="400" height="400"></canvas>
+<script>
+var ctx = document.getElementById("myChart");
+
+var arr = [
+    [10035,10046,10058,10074,11380],
+    [25,25,-50,30,-25]
+];
+
+var color = new Array(arr[0].length);
+for(var i = 0; i < arr[1].length; i++)
+{
+    if(arr[1][i] >= 0)
+        color[i] = 'rgba(0,255,0,0.2)';
+    else
+        color[i] = 'rgba(255,0,0,0.2)';
+}
+
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: arr[0],
+        datasets: [{
+            label: 'Payoffs',
+            data: arr[1],
+            backgroundColor: color,
+            borderColor: color,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
+        }
+    }
+});
+</script>
+<div style="overflow-x:auto;">
+
+<table>
+  <tr>
+    <th>BetType</th>
+    <th>Target</th>
+    <th>BetAmount</th>
+    <th>Restriction</th>
+    <th>Status</th>
+  </tr>
+</table>
+
+<script>
+var arr = [
+    ['Death','Cersei','0.5','Book_2', 'Lose']
+]
+
+var tab, tr, td, tn, row, col;
+
+tab = document.getElementsByTagName('table')[0];
+for (row = 0; row < arr.length; row++)
+{
+    tr = document.createElement('tr');
+    for (col = 0; col < arr[row].length; col++) 
+    {
+        td = document.createElement('td');
+        tn = document.createTextNode(arr[row][col]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+    }
+    tab.appendChild(tr);
+}
+</script>
+</div>
+	
+
+</body>
+</html>
