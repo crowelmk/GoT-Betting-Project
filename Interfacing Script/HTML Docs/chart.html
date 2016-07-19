@@ -4,6 +4,59 @@
 	<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
 <meta charset="utf-8">
 <style>
+/* Style The Dropdown Button */
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    width: 160px;
+    text-align: left;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover 
+{
+    background-color: rgba(0,255,0,0.6);
+    z-index: 1;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
 @font-face
 {
 	font-family: GoTFont;
@@ -44,6 +97,25 @@ body {
 	width: 1000px;
 	background-color: #333344;
 	margin: 0 auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+tr:nth-child(odd){background-color: #4CAF50}
+tr:hover{background-color: yellow;}
+
+th {
+    background-color: #4CAF50;
+    color: white;
 }
 
 
@@ -93,38 +165,109 @@ homecontent{
 </ul>
 <br>
 
+
+
+
+<div class = "dropdown">
+  <button id="title" class="dropbtn">Any</button>
+  <div class="dropdown-content">
+    <a onclick ="TitleUpdate('Death')">Death</a>
+    <a onclick ="TitleUpdate('House')">House</a>
+    <a onclick ="TitleUpdate('Reurrect')">Resrrect</a>
+    <a onclick ="TitleUpdate('Any')">Any</a>
+  </div>
+</div>
+<br>
+<br>
+<script>
+    function TitleUpdate(target) 
+    {
+        document.getElementById("title").innerHTML = target;
+    }
+</script>
+
+
+
+
+
+
+<div style="overflow-x:auto;">
+<table>
+  <tr>
+    <th>BetType</th>
+    <th>Target</th>
+    <th>BetAmount</th>
+    <th>Restriction</th>
+    <th>Status</th>
+  </tr>
+</table>
+
+<script>
+var arr = [
+    ['Death','Cersei','0.5','Book_2', 'Lose'],
+    ['House','Stark','0.5','Book_7','Win'],
+    ['House','Lannister','1.5','Book_7','Lose'],
+]
+
+var tab, tr, td, tn, row, col;
+
+tab = document.getElementsByTagName('table')[0];
+for (row = 0; row < arr.length; row++)
+{
+    tr = document.createElement('tr');
+    for (col = 0; col < arr[row].length; col++) 
+    {
+        td = document.createElement('td');
+        tn = document.createTextNode(arr[row][col]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+    }
+    tab.appendChild(tr);
+}
+</script>
+</div>
+<br>
+
+
+
+
+
+
 <canvas id="myChart" width="400" height="400"></canvas>
 <script>
 var ctx = document.getElementById("myChart");
+
+var arr = [
+    [10035,10046,10058,10074,11380],
+    [25,25,-50,30,-25]
+];
+
+var color = new Array(arr[0].length);
+for(var i = 0; i < arr[1].length; i++)
+{
+    if(arr[1][i] >= 0)
+        color[i] = 'rgba(0,255,0,0.4)';
+    else
+        color[i] = 'rgba(255,0,0,0.4)';
+}
+
 var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: [],
+        labels: arr[0],
         datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-            ],
-            borderColor: [
-                'rgba(255,99,132,1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
+            label: 'Payoffs',
+            data: arr[1],
+            backgroundColor: color,
+            borderColor: color,
             borderWidth: 1
         }]
     },
     options: {
-
         scales: {
+            xAxes: [{
+                barPercentage: 0.2
+            }],
             yAxes: [{
                 ticks: {
                     beginAtZero:true
@@ -134,7 +277,24 @@ var myChart = new Chart(ctx, {
     }
 });
 </script>
-	
+
+
+
+
+<div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</div>
 
 </body>
 </html>
