@@ -13,7 +13,8 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	erb :'home.html'
+	erb :'home.html', :locals => {'client' => @@client}
+	# erb :'updateChoice.html'
 	# erb :'chart.html', :locals => {'client' => @@client}
 end
 
@@ -34,7 +35,7 @@ get '/placeBet/:betCategory&:betChoice' do
 end
 
 post '/addBet' do
-	require_relative 'testEndToEnd.rb'
+	require_relative 'views/testEndToEnd.rb'
 	betCategory = params[:betCategory]
 	betChoice = params[:betChoice]
 	email = params[:email]

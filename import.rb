@@ -38,7 +38,6 @@ def drop_tables(client)
 	client.query("DROP TABLE IF EXISTS DeathOption")
 	client.query("DROP TABLE IF EXISTS ResurrectOption")
 	client.query("DROP TABLE IF EXISTS BetOption")
-
 end
 
 def create_tables_and_views(client)
@@ -410,9 +409,7 @@ def populate_tables(client, people, stats, battles)
 	# Leave bet tables empty, as no bets have been made yet
 end
 
-def create_stored_procedures(client)
-	client.query("USE testBase")
-
+def create_insert_bet_option(client)
 	client.query("DROP procedure IF EXISTS insert_bet_option")
 	client.query("CREATE PROCEDURE insert_bet_option(
 	    IN betType VARCHAR(30),
@@ -446,8 +443,9 @@ def create_stored_procedures(client)
 	    
 		SET output = 0;
 	END")
+end
 
-
+def create_turn_off_bet_availability(client)
 	client.query("DROP procedure IF EXISTS turn_off_bet_availability")
 	client.query("CREATE PROCEDURE turn_off_bet_availability(
 	    IN inputBetType VARCHAR(30),
@@ -487,7 +485,9 @@ def create_stored_procedures(client)
 
 		SET output = 0;
 	END")
-	
+end
+
+def create_turn_on_bet_availability(client)
 	client.query("DROP procedure IF EXISTS turn_on_bet_availability")
 	client.query("CREATE PROCEDURE turn_on_bet_availability(
 	    IN inputBetType VARCHAR(30),
@@ -527,7 +527,9 @@ def create_stored_procedures(client)
 
 		SET output = 0;
 	END")
+end
 
+def create_update_person(client)
 	client.query("DROP procedure IF EXISTS update_person")
 	client.query("CREATE PROCEDURE update_person(
 	    IN charName VARCHAR(80),
@@ -563,7 +565,7 @@ def create_stored_procedures(client)
 			LEAVE ThisProc;
 		END IF;
 
-		IF(houseName = ' ') THEN
+		IF(houseName IS NULL) THEN
 			SET matchingHouseID = (SELECT HouseID
 								FROM Person
 								WHERE CharID = matchingCharID);
@@ -573,11 +575,19 @@ def create_stored_procedures(client)
 									Where H.HouseName = houseName);
 		END IF;
 
+		IF(newTitle IS NULL) THEN
+			SET newTitle = (SELECT Title
+								FROM Person
+								WHERE CharID = matchingCharID);
+		END IF;
+
+
 		UPDATE Person
 	    SET HouseID = matchingHouseID,
 	    	Title = newTitle,
 	    	IsAlive = newIsAlive
 	    WHERE CharID = matchingCharID;
+
 
 	    IF(currentIsAlive != newIsAlive AND newIsAlive = 1) THEN
 	    	SET optionCheck = (SELECT COUNT(*)
@@ -598,7 +608,7 @@ def create_stored_procedures(client)
 		    END IF;
 
 	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'resurrect', curretnBookNo, betsAffected);
+	    	VALUES(matchingCharID, 'resurrect', currentBookNo, betsAffected);
 	    ELSEIF(currentIsAlive != newIsAlive AND newIsAlive = 0) THEN
 	    	SET optionCheck = (SELECT COUNT(*)
 	    						FROM DeathOption AS D, BetOption AS B
@@ -618,16 +628,18 @@ def create_stored_procedures(client)
 		    END IF;
 
 	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'death', curretnBookNo, betsAffected);
+	    	VALUES(matchingCharID, 'death', currentBookNo, betsAffected);
 	    END IF;
 
 		SET output = 0;
 	END")
+end
 
+def create_update_house(client)
 	client.query("DROP procedure IF EXISTS update_house")
 	client.query("CREATE PROCEDURE update_house(
-	    IN inputHouseName VARCHAR(80),
-	    IN inputWonThrone SMALLINT,
+	    IN newHouseName VARCHAR(80),
+	    IN newWonThrone SMALLINT,
 	   	IN currentBookNo INT,
 	    OUT output INT)
 
@@ -646,13 +658,13 @@ def create_stored_procedures(client)
 
 		SET matchingHouseID = (SELECT HouseID
 								FROM House
-								WHERE HouseName = inputHouseName);
+								WHERE HouseName = newhouseName);
 
 		SET throneWinnersCount = (SELECT COUNT(*)
 									FROM House
 									Where WonThrone = 1);
 
-		IF(throneWinnersCount > 0 AND inputWonThrone = 1 AND oldWonThrone != inputWonThrone) THEN
+		IF(throneWinnersCount > 0 AND newWonThrone = 1 AND oldWonThrone != newWonThrone) THEN
 			SET output = -1;
 		 	LEAVE ThisProc;
 		END IF;
@@ -663,7 +675,7 @@ def create_stored_procedures(client)
 		END IF;
 
 		UPDATE House
-		SET WonThrone = inputWonThrone
+		SET WonThrone = newWonThrone
 		WHERE HouseID = matchingHouseID;
 
 	    IF(oldWonThrone != newWonThrone AND newWonThrone = 1) THEN
@@ -685,15 +697,17 @@ def create_stored_procedures(client)
 		    END IF;
 
 	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'house', curretnBookNo, betsAffected);
+	    	VALUES(matchingCharID, 'house', currentBookNo, betsAffected);
 	    END IF;
 
 		SET output = 0;
 	END")
+end
 
+def create_delete_event(client)
 	client.query("DROP procedure IF EXISTS delete_event")
 	client.query("CREATE PROCEDURE delete_event(
-	    IN removeOptionID INT,
+	    IN removeEventID INT,
 	    OUT output INT)
 
 	ThisProc:BEGIN
@@ -705,11 +719,12 @@ def create_stored_procedures(client)
 		DECLARE betsAffected INT;
 		DECLARE eventToModify INT;
 		DECLARE doBetsNeedUpdate INT;
+		DECLARE eventStatus INT;
 		DECLARE updateStatus INT;
 
 		SET eventCount = (SELECT COUNT(*)
 							FROM Event
-							Where OptionID = removeOptionID);
+							Where EventID = removeEventID);
 
 		IF(eventCount = 0) THEN
 			SET output = -1;
@@ -718,52 +733,65 @@ def create_stored_procedures(client)
 
 		SET wereBetsAffected = (SELECT ChangedBets
 									FROM Event
-									WHERE OptionID = removeOptionID);
+									WHERE EventID = removeEventID);
 
 		SET eventType = (SELECT Description
 							FROM Event
-							WHERE OptionID = removeOptionID);
+							WHERE EventID = removeEventID);
 
 		SET bookNo = (SELECT BookOccurred
 						FROM Event
-						WHERE OptionID = removeOptionID);
+						WHERE EventID = removeEventID);
 
 
 		DELETE FROM Event
-		WHERE OptionID = removeOptionID;
+		WHERE EventID = removeEventID;
 
 		IF(eventType = 'house') THEN
 			UPDATE House
 			SET WonThrone = 0
 			WHERE HouseID = foreignID;
 
-			SET eventToModify =	SELECT MIN(E.EventID)
+			SET eventToModify =	(SELECT MIN(E.EventID)
 									FROM HouseOption AS H, BetOption AS B, Event AS E
 									WHERE H.OptionID = B.OptionID AND H.HouseID = E.ParticipantID
-										  AND E.BetType = 'house' AND E.BookOccurred = bookNo
+										  AND E.Description = 'house' AND E.BookOccurred = bookNo);
 		ELSEIF(eventType = 'death') THEN
 			UPDATE Person
 			SET IsAlive = 1
 			WHERE CharID = foreignID;
 
-			SET eventToModify =	SELECT MIN(E.EventID)
-									FROM DeathOption AS H, BetOption AS B, Event AS E
-									WHERE H.OptionID = B.OptionID AND H.HouseID = E.ParticipantID
-										  AND E.BetType = 'house' AND E.BookOccurred = bookNo
+			SET eventToModify =	(SELECT MIN(E.EventID)
+									FROM DeathOption AS D, BetOption AS B, Event AS E
+									WHERE D.OptionID = B.OptionID AND D.CharID = E.ParticipantID
+										  AND E.Description = 'death' AND E.BookOccurred = bookNo);
 		ELSE
 			UPDATE Person
 			SET IsAlive = 0
 			WHERE CharID = foreignID;
 
-			SET eventToModify =	SELECT MIN(E.EventID)
-									FROM ResurrectOption AS H, BetOption AS B, Event AS E
-									WHERE H.OptionID = B.OptionID AND H.HouseID = E.ParticipantID
-										  AND E.BetType = 'house' AND E.BookOccurred = bookNo
+			SET eventToModify =	(SELECT MIN(E.EventID)
+									FROM ResurrectOption AS R, BetOption AS B, Event AS E
+									WHERE R.OptionID = B.OptionID AND R.CharID = E.ParticipantID
+										  AND E.Description = 'resurrect' AND E.BookOccurred = bookNo);
 		END IF;
 
-		IF(wereBetsAffected = 1) THEN
 
-			CALL turn_on_bet_availability(eventType, bookNo, eventStatus); 
+		/* 
+		Removed event caused some bets to be resolved, but no other event will leave these
+		bets resolved. So, make bets unresolved (available) again.
+		*/
+		IF(wereBetsAffected = 1 AND eventToModify IS NULL) THEN
+			CALL turn_on_bet_availability(eventType, bookNo, eventStatus);
+
+		ELSEIF(wereBetsAffected = 1 AND eventToModify IS NOT NULL) THEN
+
+		/* Removed event caused some bets to be resolved, but now another event will resolve
+		these bets instead. Leave bets resolved, but update the event to reflect what it did. */
+			UPDATE Event
+			SET ChangedBets = 1
+			WHERE EventID = eventToModify;
+
 		END IF;
 
 		IF(eventStatus != 0) THEN
@@ -773,6 +801,17 @@ def create_stored_procedures(client)
 
 		SET output = 0;
 	END")
+end
+
+def create_stored_procedures(client)
+	client.query("USE testBase")
+
+	create_insert_bet_option(client)
+	create_turn_off_bet_availability(client)
+	create_turn_on_bet_availability(client)
+	create_update_person(client)
+	create_update_house(client)
+	create_delete_event(client)
 end
 
 # Parse the data tables
@@ -793,7 +832,8 @@ if mode == "create"
 	create_tables_and_views(client)
 	create_stored_procedures(client)
 	# Populate the database
-	populate_tables(client, people, stats, battles)\
+	populate_tables(client, people, stats, battles)
 else # How do this considering populate dumps it in special way
 	client.query("USE #{databaseName}")
+	# add_more_data(client, people, stats, battles)
 end

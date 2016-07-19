@@ -49,6 +49,13 @@ body {
 	display: block;	
 }
 
+.statusText {
+	position: absolute;
+	bottom: 0px;
+    left: 0px;
+    font-size: 22px;
+}
+
 .betbutton{
 	position: relative;
 	top: 0px;
@@ -97,12 +104,102 @@ homecontent{
   }
 </script>
 <div id = "content">
-  <homecontent>Death<button type="button" onclick="visitPage('/deathBet')" class="betbutton">Show Options</button></homecontent>
+  <homecontent>
+	  Death
+	  <button type="button" id = "deathButton" onclick="visitPage('/deathBet')" class="betbutton">Show Options</button>
+	  <div id = "deathText" class = "statusText">
+	  </div>
+  </homecontent>
   <br>
-  <homecontent>Victory<button type="button" onclick="visitPage('/houseBet')" class="betbutton">Show Options</button></homecontent>
+  <homecontent>
+	  Victory
+	  <button type="button" id = "houseButton" onclick="visitPage('/houseBet')" class="betbutton">Show Options</button>
+	  <div id = "houseText" class = "statusText" visibility: hidden>
+	  </div>
+  </homecontent>
   <br>
-  <homecontent>Re surre ct<button type="button" onclick="visitPage('/resurrectBet')" class="betbutton">Show Options</button></homecontent>
+  <homecontent>
+	  Re surre ct
+	  <button type="button" id = "resurrectButton" onclick="visitPage('/resurrectBet')" class="betbutton">Show Options</button>
+	  <div id = "resurrectText" class = "statusText">
+	  </div>
+  </homecontent>
+
+
+
+  <script> 
+  	function updateDeathDisplay() {
+  		var betIsAvailable = 
+  		<%= require_relative 'testEndToEnd.rb'
+  			check_bet_availability(client, 'death', 6) %>;
+
+  		if(betIsAvailable) {
+  			document.getElementById("deathButton").style.visibility = "visible";
+  			document.getElementById("deathText").style.visibility = "hidden";
+  		}
+  		else {
+  			var betWinner =
+  			"<%= require_relative 'testEndToEnd.rb'
+  				grab_bet_winner(client, 'death', 6) %>";
+
+  			document.getElementById("deathButton").style.visibility = "hidden";
+  			document.getElementById("deathText").innerHTML
+  								= "Bet Finished <br> Winner:  " + betWinner;
+  			document.getElementById("deathText").style.visibility = "visible";
+  		}
+  	}
+
+  	function updateHouseDisplay() {
+  		var betIsAvailable = 
+  		<%= require_relative 'testEndToEnd.rb'
+  			check_bet_availability(client, 'house', 6) %>;
+
+  		if(betIsAvailable) {
+  			document.getElementById("houseButton").style.visibility = "visible";
+  			document.getElementById("houseText").style.visibility = "hidden";
+  		}
+  		else {
+  			var betWinner =
+  			"<%= require_relative 'testEndToEnd.rb'
+  				grab_bet_winner(client, 'house', 6) %>";
+  			alert(betIsAvailable);
+  			document.getElementById("houseButton").style.visibility = "hidden";
+  			document.getElementById("houseText").innerHTML
+  								= "Bet Finished <br> Winner: " + betWinner;
+  			document.getElementById("houseText").style.visibility = "visible";
+  		}
+  	}
+
+  	function updateResurrectDisplay() {
+  		var betIsAvailable = 
+  		<%= require_relative 'testEndToEnd.rb'
+  			check_bet_availability(client, 'resurrect', 6) %>;
+
+  		if(betIsAvailable) {
+  			document.getElementById("resurrectButton").style.visibility = "visible";
+  			document.getElementById("resurrectText").style.visibility = "hidden";
+  		}
+  		else {
+  			var betWinner = 
+  			"<%= require_relative 'testEndToEnd.rb'
+  				grab_bet_winner(client, 'resurrect', 6) %>";
+
+  			document.getElementById("resurrectButton").style.visibility = "hidden";
+  			document.getElementById("resurrectText").innerHTML
+  								= "Bet Finished <br> Winner: " + betWinner;
+  			document.getElementById("resurrectText").style.visibility = "visible";
+  		}
+  	}
+
+  	window.onload = function() {
+  		updateDeathDisplay();
+  		updateHouseDisplay();
+  		updateResurrectDisplay();
+  	}
+  </script>
+
 </div>
+
 
 </body>
 </html>
