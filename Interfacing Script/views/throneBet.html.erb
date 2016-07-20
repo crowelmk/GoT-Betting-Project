@@ -17,8 +17,11 @@ ul {
     background-color: #333;
 }	
 
+li {
+    float: left;
+}
+
 li a {
-	float: left;
     display: block;
     color: white;
     text-align: center;
@@ -30,15 +33,6 @@ li a {
 li a:hover:not(.active) {
 	background-color: #111;
 	color: #EBDE36;
-}
-
-li b {
-	background-color: #333;
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 20px 200px;
-    text-decoration: none;
 }
 
 .active {
@@ -79,7 +73,6 @@ homecontent{
 	color: #;
 	color: #ABABAB;
 }
-
 </style>
 <script src = "http://code.jquery.com/jquery-1.7.2.min.js"></script> 
 <title>test</title>
@@ -91,7 +84,7 @@ homecontent{
 <img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
 <body>
 <ul>
-  <li><a class = "active" href = "/">Home</a></li>
+  <li><a href = "/">Home</a></li>
   <li><a href="#history">History</a></li>
   <li><a href="#statistics">Statistics</a></li>
   <li style="float:right"><a href="#about">About</a></li>
@@ -99,17 +92,22 @@ homecontent{
 <br>
 
 <script>
-  function visitPage(url) {
-    window.location.href = url;
-  }
+	function visitPage(url) {
+		window.location.href = url;
+	}
 </script>
-<div id = "content">
 
-  <li><b href="#one">Update Person</b></li>
+
+<div id = "content">
+  <homecontent>Lannister<button type="button" onclick="visitPage('placeBet/throne&lannister')" class="betbutton">Place Bet</button></homecontent>
   <br>
-  <li><b href="#two">Update House</b></li>
+  <homecontent>Stark<button type="button" onclick="visitPage('placeBet/throne&stark')" class="betbutton">Place Bet</button></homecontent>
   <br>
-  <li><b href="#three">Delete Event</b></li>
+  <homecontent>Baratheon<button type="button" onclick="visitPage('placeBet/throne&baratheon')" class="betbutton">Place Bet</button></homecontent>
+  <br>
+  <homecontent>Targaryen<button type="button" onclick="visitPage('placeBet/throne&targaryen')" class="betbutton">Place Bet</button></homecontent>
+  <br>
+  <homecontent>Night's Watch<button type="button" onclick="visitPage('placeBet/throne&watch')" class="betbutton">Place Bet</button></homecontent>
 </div>
 
 </body>

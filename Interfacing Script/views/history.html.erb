@@ -1,0 +1,323 @@
+<!doctype html>
+<html>
+<head>
+	<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
+<meta charset="utf-8">
+<style>
+/* Style The Dropdown Button */
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    width: 160px;
+    text-align: left;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover 
+{
+    background-color: rgba(0,255,0,0.6);
+    z-index: 1;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+tr:nth-child(odd){background-color: #4CAF50}
+tr:hover{background-color: yellow;}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+
+
+#banner{
+	display: block;	
+}
+
+#userinput{
+    color: white;
+}
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<title>test</title>
+</head>
+</html>
+
+
+<html>
+<img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a class="active" href="#home">Home</a></li>
+  <li><a href="#history">History</a></li>
+  <li><a href="#statistics">Statistics</a></li>
+  <li style="float:right"><a href="#about">About</a></li>
+</ul>
+<br>
+
+
+<div id = "userinput">
+    Email: <input type = "text" id = "email">
+    <div class = "dropdown">
+      <button id="title" class="dropbtn">Select Bets</button>
+      <div class="dropdown-content">
+        <a onclick ="TitleUpdate('All')">All</a>
+        <a onclick ="TitleUpdate('Death')">Death</a>
+        <a onclick ="TitleUpdate('Throne')">Throne</a>
+        <a onclick ="TitleUpdate('Resurrect')">Resurrect</a>
+      </div>
+    </div>
+</div>
+ <button id = "submit" onclick = "updatePage()">Submit Query</button>
+<br>
+<br>
+<script>
+    function TitleUpdate(target) 
+    {
+        document.getElementById("title").innerHTML = target;
+    }
+
+    function obtainBetHistory(historyOption, email) {
+        var request = new XMLHttpRequest();
+        var params = "option=" + historyOption + "&email=" + email;
+        request.onreadystatechange = function() {
+            if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+                var myarr = JSON.parse(request.responseText);
+                modifyTableContents(myarr)
+            }
+        }
+        request.open("POST", "/obtainBetHistory", true);
+        request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        request.setRequestHeader("Content-length", params.length);
+        request.setRequestHeader("Connection", "close");
+
+        request.send(params);
+    }
+</script>
+
+<div style="overflow-x:auto;">
+<table>
+  <tr>
+    <th>Email</th>
+    <th>Bet Type</th>
+    <th>Winner</th>
+    <th>Status</th>
+    <th>Money Bet</th>
+  </tr>
+</table>
+
+<script>
+function modifyTableContents(arr) {
+    var tab, tr, td, tn, row, col;
+
+    tab = document.getElementsByTagName('table')[0];
+    for (row = 0; row < arr.length; row++)
+    {
+        tr = document.createElement('tr');
+        for (col = 0; col < arr[row].length; col++) 
+        {
+            td = document.createElement('td');
+            tn = document.createTextNode(arr[row][col]);
+            td.appendChild(tn);
+            tr.appendChild(td);
+        }
+        tab.appendChild(tr);
+    }
+}
+</script>
+</div>
+<br>
+
+<canvas id="myChart" width="400" height="400"></canvas>
+<script>
+function modifyChart() {
+    var ctx = document.getElementById("myChart");
+
+    var arr = [
+        [10035,10046,10058,10074,11380],
+        [25,25,-50,30,-25]
+    ];
+
+    var color = new Array(arr[0].length);
+    for(var i = 0; i < arr[1].length; i++)
+    {
+        if(arr[1][i] >= 0)
+            color[i] = 'rgba(0,255,0,0.4)';
+        else
+            color[i] = 'rgba(255,0,0,0.4)';
+    }
+
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Payoffs',
+                data: arr[1],
+                backgroundColor: color,
+                borderColor: color,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    barPercentage: 0.2
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+</script>
+
+<div>
+<script>
+    function validateInput(email) {
+      var emailRegex = new RegExp(".+@.+\..+");
+      return email.match(emailRegex);
+    }
+
+    function updatePage() {
+        var historyOption = document.getElementById("title").innerHTML;
+        if(historyOption == "Select Bets") {
+            alert('Select which bets to display!');
+            return;
+        }
+        var email = document.getElementById("email").value;
+        if(!validateInput(email)) {
+            alert('Email must be of form blah@blah.com, try again.');
+        }
+        else {
+            var returned = obtainBetHistory(historyOption, email);
+        }
+    }
+</script>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</div>
+
+</body>
+</html>

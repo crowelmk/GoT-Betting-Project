@@ -2,6 +2,7 @@
 require 'sinatra'
 require 'mysql2'
 require 'erb'
+require 'json'
 Tilt.register Tilt::ERBTemplate, 'html.erb'
 
 # template_path = "test.html.erb"
@@ -13,13 +14,15 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	erb :'home.html', :locals => {'client' => @@client}
+	# erb :'home.html', :locals => {'client' => @@client}
 	# erb :'updateChoice.html'
 	# erb :'chart.html', :locals => {'client' => @@client}
+	erb :'history.html', :locals => {'client' => @@client}
+
 end
 
-get '/houseBet' do
-	erb :'houseBet.html'
+get '/throneBet' do
+	erb :'throneBet.html'
 end
 
 get '/deathBet' do
@@ -42,8 +45,8 @@ post '/addBet' do
 	bet = params[:bet]
 
 	case betCategory
-	when "house"
-		add_house_bet(betChoice, @@client, email, bet)
+	when "throne"
+		add_throne_bet(betChoice, @@client, email, bet)
 	when "death"
 		add_death_bet(betChoice, @@client, email, bet)
 	when "resurrect"
@@ -53,4 +56,10 @@ post '/addBet' do
 	end
 
 	redirect '/'
+end
+
+post '/obtainBetHistory' do
+	require_relative 'views/testEndtoEnd.rb'
+
+	obtain_bet_history(@@client, params[:option], params[:email]).to_json
 end

@@ -34,7 +34,7 @@ def drop_tables(client)
 	client.query("DROP TABLE IF EXISTS House")
 	client.query("DROP TABLE IF EXISTS Battle")
 	client.query("DROP TABLE IF EXISTS Event")
-	client.query("DROP TABLE IF EXISTS HouseOption")
+	client.query("DROP TABLE IF EXISTS ThroneOption")
 	client.query("DROP TABLE IF EXISTS DeathOption")
 	client.query("DROP TABLE IF EXISTS ResurrectOption")
 	client.query("DROP TABLE IF EXISTS BetOption")
@@ -58,24 +58,16 @@ def create_tables_and_views(client)
 					Name varchar(80) NOT NULL, 
 					Gender INT NOT NULL, 
 					Title varchar(60), 
-					IntroBookNo INT, 
-					FOREIGN KEY(HouseID) REFERENCES House(HouseID))")
-
-	# client.query("CREATE TABLE IF NOT EXISTS Death (
-	# 				DeathID INT, 
-	# 				CharID INT, 
-	# 				DeathYear INT NOT NULL, 
-	# 				DeathBookNo INT, 
-	# 				DeathChapterNo INT, 
-	# 				PRIMARY KEY(DeathID, CharID), 
-	# 				FOREIGN KEY(CharID) REFERENCES Person(CharID),
-	# 				CHECK(DeathYear > 296))")
+					FOREIGN KEY(HouseID) REFERENCES House(HouseID),
+					CHECK(IsAlive = 0 OR IsAlive = 1),
+					CHECK(Gender = 0 OR Gender = 1))")
 
 	client.query("CREATE TABLE IF NOT EXISTS Battle (
 					BattleID INT PRIMARY KEY, 
 					BattleName VARCHAR(80) NOT NULL, 
 					City VARCHAR(60), 
-					Year INT)")
+					Year INT,
+					CHECK(Year > 296))")
 
 	client.query("CREATE TABLE IF NOT EXISTS CombatLog (
 					HouseID INT NOT NULL, 
@@ -87,18 +79,21 @@ def create_tables_and_views(client)
 
 	client.query("CREATE TABLE IF NOT EXISTS Event (
 					EventID INT AUTO_INCREMENT PRIMARY KEY, 
+					EventType VARCHAR(80) NOT NULL,
 					ParticipantID INT NOT NULL,
-					Description VARCHAR(80) NOT NULL,
+					ParticipantName VARCHAR(80) NOT NULL,
 					BookOccurred SMALLINT NOT NULL,
-					ChangedBets SMALLINT NOT NULL
-					CHECK(ChangedBets = 0 OR ChangedBets = 1))")
+					ChangedBets SMALLINT NOT NULL,
+					CHECK(ChangedBets = 0 OR ChangedBets = 1),
+					CHECK(BookOccurred > 0 AND BookOccurred < 11))")
 
 	client.query("CREATE TABLE IF NOT EXISTS BetOption (
 					OptionID INT AUTO_INCREMENT PRIMARY KEY, 
 					BetType VARCHAR(80) NOT NULL,
 					BookNo SMALLINT NOT NULL,
 					Availability SMALLINT NOT NULL,
-					CHECK(Availability = 0 OR Availability = 1))")
+					CHECK(Availability = 0 OR Availability = 1),
+					CHECK(BookOccurred > 0 AND BookOccurred < 11))")
 
 	client.query("CREATE TABLE IF NOT EXISTS DeathOption(
 					OptionID INT NOT NULL PRIMARY KEY,
@@ -106,7 +101,7 @@ def create_tables_and_views(client)
 					FOREIGN KEY(OptionID) REFERENCES BetOption(OptionID),
 					FOREIGN KEY(CharID) REFERENCES Person(CharID))")
 
-	client.query("CREATE TABLE IF NOT EXISTS HouseOption(
+	client.query("CREATE TABLE IF NOT EXISTS ThroneOption(
 					OptionID INT NOT NULL PRIMARY KEY,
 					HouseID INT NOT NULL,
 					FOREIGN KEY(OptionID) REFERENCES BetOption(OptionID),
@@ -123,30 +118,10 @@ def create_tables_and_views(client)
 					OptionID INT NOT NULL,
 					UserEmail VARCHAR(100) NOT NULL,
 					BetAmount DECIMAL(10, 2) NOT NULL,
+					ResolvingEventID INT DEFAULT NULL,
+					Status VARCHAR(20) DEFAULT 'pending',
 					FOREIGN KEY(OptionID) REFERENCES BetOption(OptionID),
-					CHECK(CashBet > 1.00))")
-
-	# client.query("CREATE TABLE IF NOT EXISTS DeathBet (
-	# 				BetID INT NOT NULL, 
-	# 				CharID INT NOT NULL, 
-	# 				FOREIGN KEY(BetID) REFERENCES Bet(BetID),
-	# 				FOREIGN KEY(CharID) REFERENCES Person(CharID),
-	# 				PRIMARY KEY(BetID))")
-
-	# # RFD = Resurrect from death
-	# client.query("CREATE TABLE IF NOT EXISTS RFDBet (
-	# 				BetID INT NOT NULL, 
-	# 				CharID INT NOT NULL, 
-	# 				FOREIGN KEY(BetID) REFERENCES Bet(BetID),
-	# 				FOREIGN KEY(CharID) REFERENCES Death(CharID),
-	# 				PRIMARY KEY(BetID))")
-
-	# client.query("CREATE TABLE IF NOT EXISTS HouseBet (
-	# 				BetID INT NOT NULL, 
-	# 				HouseID INT NOT NULL, 
-	# 				FOREIGN KEY(BetID) REFERENCES Bet(BetID),
-	# 				FOREIGN KEY(HouseID) REFERENCES House(HouseID),
-	# 				PRIMARY KEY(BetID))")
+					CHECK(BetAmount > 1.00))")
 
 	# Views
 	client.query("CREATE OR REPLACE VIEW HouseMembership (
@@ -212,7 +187,7 @@ def populate_option_tables(client)
 	end
 
 	houseIDs.each do |id|
-		client.query("CALL insert_bet_option('house', #{id}, 6, @output_value)")
+		client.query("CALL insert_bet_option('throne', #{id}, 6, @output_value)")
 	end
 end
 
@@ -303,24 +278,9 @@ def populate_tables(client, people, stats, battles)
 			personIsAlive = person[2] != nil ? 0 : 1
 
 			houseId = houseIdMapping.fetch(houseName)
-	        client.query("INSERT INTO Person(CharID, IsAlive, HouseID, Name, Gender, Title, IntroBookNo) 
-	        VALUES(#{currentIdValue}, #{personIsAlive}, #{houseId}, '#{name}', #{gender}, '#{title}', #{introBookNo})")
+	        client.query("INSERT INTO Person(CharID, IsAlive, HouseID, Name, Gender, Title) 
+	        VALUES(#{currentIdValue}, #{personIsAlive}, #{houseId}, '#{name}', #{gender}, '#{title}')")
 
-			# if(person[2] != nil) # person is dead, record their death
-			# 	# In our imported data, no person has died twice. However, since characters
-			# 	# are able to be resurrected, it is worth having a deathId that tracks which
-			# 	# death a character's entry in the DEATH table refers to.
-			# 	deathId = 1
-
-			# 	deathYear = person[2].to_i
-
-			# 	deathBookNo = person[3].to_i
-
-			# 	deathBookChap = person[4].to_i
-
-			# 	client.query("INSERT INTO Death(DeathID, CharID, DeathYear, DeathBookNo, DeathChapterNo)
-	  #      	 				  VALUES(#{deathId}, #{currentIdValue}, #{deathYear}, #{deathBookNo}, #{deathBookChap})")
-			# end
 			currentIdValue = currentIdValue + 1
 		end
 	end
@@ -420,7 +380,7 @@ def create_insert_bet_option(client)
 	ThisProc:BEGIN
 		DECLARE currentOptionID INT;
 
-		IF(betType != 'house' AND betType != 'death' AND betType != 'resurrect') THEN
+		IF(betType != 'throne' AND betType != 'death' AND betType != 'resurrect') THEN
 			SET output = -1;
 			LEAVE ThisProc;
 		END IF;
@@ -430,8 +390,8 @@ def create_insert_bet_option(client)
 	    
 	    SET currentOptionID = LAST_INSERT_ID();
 	    
-		IF(betType = 'house') THEN
-			INSERT INTO HouseOption
+		IF(betType = 'throne') THEN
+			INSERT INTO ThroneOption
 	        VALUES (currentOptionID, foreignID);
 		ELSEIF(betType = 'death') THEN
 			INSERT INTO DeathOption
@@ -544,12 +504,16 @@ def create_update_person(client)
 		DECLARE matchingCharID INT;
 		DECLARE matchingHouseID INT;
 		DECLARE optionCheck INT;
+		DECLARE newEventID INT;
+		DECLARE newEventType INT;
 		DECLARE updateStatus INT;
-		DECLARE betsAffected INT;
+		DECLARE wereBetsAffected INT;
 
 		SET matchingCharID = (SELECT CharID
 								FROM Person
 								Where Name = charName);
+
+		/* Validate input. */
 
 		IF(matchingCharID IS NULL) THEN
 			SET output = -1;
@@ -582,6 +546,8 @@ def create_update_person(client)
 		END IF;
 
 
+		/* Perform UPDATE. */
+
 		UPDATE Person
 	    SET HouseID = matchingHouseID,
 	    	Title = newTitle,
@@ -589,47 +555,100 @@ def create_update_person(client)
 	    WHERE CharID = matchingCharID;
 
 
+	    /* Log UPDATE into EVENT table (if necessary). */
+
 	    IF(currentIsAlive != newIsAlive AND newIsAlive = 1) THEN
+	        SET newEventType = 'resurrect';
+
 	    	SET optionCheck = (SELECT COUNT(*)
 	    						FROM ResurrectOption AS R, BetOption AS B
 	    						WHERE R.OptionID = B.OptionID AND R.CharID = matchingCharID
 	    							  AND B.BookNo = currentBookNo);
 
 	    	IF(optionCheck = 0) THEN
-	    		SET betsAffected = 0;
+	    		SET wereBetsAffected = 0;
 	    	ELSE 
-		    	CALL turn_off_bet_availability('resurrect', currentBookNo, updateStatus);
+		    	CALL turn_off_bet_availability(newEventType, currentBookNo, updateStatus);
 
 		    	IF(updateStatus = 0) THEN
-		    		SET betsAffected = 1;
+		    		SET wereBetsAffected = 1;
 		    	ELSE
-		    		SET betsAffected = 0;
+		    		SET wereBetsAffected = 0;
 		    	END IF;
 		    END IF;
 
-	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'resurrect', currentBookNo, betsAffected);
+    		INSERT INTO Event(ParticipantID, EventType, ParticipantName, BookOccurred, ChangedBets)
+    		VALUES(matchingCharID, newEventType, charName, currentBookNo, wereBetsAffected);
+
 	    ELSEIF(currentIsAlive != newIsAlive AND newIsAlive = 0) THEN
+	    	SET newEventType = 'death';
+
 	    	SET optionCheck = (SELECT COUNT(*)
 	    						FROM DeathOption AS D, BetOption AS B
 	    						WHERE D.OptionID = B.OptionID AND D.CharID = matchingCharID
 	    							  AND B.BookNo = currentBookNo);
 
 	    	IF(optionCheck = 0) THEN
-	    		SET betsAffected = 0;
+	    		SET wereBetsAffected = 0;
 	    	ELSE 
-		    	CALL turn_off_bet_availability('death', currentBookNo, updateStatus);
+		    	CALL turn_off_bet_availability(newEventType, currentBookNo, updateStatus);
 
 		    	IF(updateStatus = 0) THEN
-		    		SET betsAffected = 1;
+		    		SET wereBetsAffected = 1;
 		    	ELSE
-		    		SET betsAffected = 0;
+		    		SET wereBetsAffected = 0;
 		    	END IF;
 		    END IF;
 
-	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'death', currentBookNo, betsAffected);
+    		INSERT INTO Event(ParticipantID, EventType, ParticipantName, BookOccurred, ChangedBets)
+    		VALUES(matchingCharID, newEventType, charName, currentBookNo, wereBetsAffected);
+
+	    	SET newEventID = LAST_INSERT_ID();
+	    ELSE
+	    	SET wereBetsAffected = 0;
 	    END IF;
+
+
+	    /* If bets were resolved, then we need to ensure that those bets know which
+	    event resolved them. So, run through and update bet's field that indicates which
+	    event resolved them, if needed. */
+	    IF(wereBetsAffected = 1 and newEventType = 'death') THEN
+	    	UPDATE Bet
+	    	SET ResolvingEventID = newEventID
+	    	WHERE OptionID IN (SELECT B.OptionID
+	    						FROM BetOption AS B
+	    						WHERE B.BetType = newEventType AND B.BookNo = currentBookNo);
+
+			IF(newEventType = 'death') THEN
+		    	UPDATE Bet
+		    	SET Status = 'win'
+		    	WHERE OptionID IN (SELECT D.OptionID
+		    						FROM DeathOption AS D, Event AS E
+		    						WHERE ResolvingEventID = E.EventID 
+		    							  AND D.CharID = E.ParticipantID);
+
+		    	UPDATE Bet
+		    	SET Status = 'loss'
+		    	WHERE OptionID IN (SELECT D.OptionID
+		    						FROM DeathOption AS D, Event AS E
+		    						WHERE ResolvingEventID = E.EventID 
+		    							  AND D.CharID != E.ParticipantID);
+		    ELSEIF(newEventType = 'resurrect') THEN
+		    	UPDATE Bet
+		    	SET Status = 'win'
+		    	WHERE OptionID IN (SELECT R.OptionID
+		    						FROM ResurrectOption AS R, Event AS E
+		    						WHERE ResolvingEventID = E.EventID 
+		    							  AND R.CharID = E.ParticipantID);
+
+		    	UPDATE Bet
+		    	SET Status = 'loss'
+		    	WHERE OptionID IN (SELECT R.OptionID
+		    						FROM ResurrectOption AS R, Event AS E
+		    						WHERE ResolvingEventID = E.EventID 
+		    							  AND R.CharID != E.ParticipantID);
+		    END IF;
+		END IF;
 
 		SET output = 0;
 	END")
@@ -650,7 +669,7 @@ def create_update_house(client)
 		DECLARE optionCheck INT;
 		DECLARE checkOption INT;
 		DECLARE updateStatus INT;
-		DECLARE betsAffected INT;
+		DECLARE wereBetsAffected INT;
 
 		SET oldWonThrone = (SELECT WonThrone
 								FROM House
@@ -680,24 +699,35 @@ def create_update_house(client)
 
 	    IF(oldWonThrone != newWonThrone AND newWonThrone = 1) THEN
 	    	SET optionCheck = (SELECT COUNT(*)
-	    						FROM HouseOption AS H, BetOption AS B
+	    						FROM ThroneOption AS T, BetOption AS B
 	    						WHERE R.OptionID = B.OptionID AND R.CharID = matchingCharID
 	    							  AND B.BookNo = currentBookNo);
 
 	    	IF(optionCheck = 0) THEN
-	    		SET betsAffected = 0;
+	    		SET wereBetsAffected = 0;
 	    	ELSE 
-		    	CALL turn_off_bet_availability('house', currentBookNo, updateStatus);
+		    	CALL turn_off_bet_availability('throne', currentBookNo, updateStatus);
 
 		    	IF(updateStatus = 0) THEN
-		    		SET betsAffected = 1;
+		    		SET wereBetsAffected = 1;
 		    	ELSE
-		    		SET betsAffected = 0;
+		    		SET wereBetsAffected = 0;
 		    	END IF;
 		    END IF;
 
-	    	INSERT INTO Event(ParticipantID, Description, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'house', currentBookNo, betsAffected);
+	    	INSERT INTO Event(ParticipantID, EventType, ParticipantName, BookOccurred, ChangedBets)
+	    	VALUES(matchingCharID, 'throne', currentBookNo, wereBetsAffected);
+	    END IF;
+
+	    /* If bets were affected, then we need to ensure that those bets know which
+	    event affected them. So, run through and update field that indicates which
+	    event affected them if needed. */
+	    IF(wereBetsAffected = 1) THEN
+	    	UPDATE Bet
+	    	SET ResolvingEventID = newEventID
+	    	WHERE OptionID IN (SELECT OptionID
+	    						FROM BetOption
+	    						WHERE BetType = 'throne' AND BookNo = currentBookNo);
 	    END IF;
 
 		SET output = 0;
@@ -716,7 +746,6 @@ def create_delete_event(client)
 		DECLARE eventType VARCHAR(30);
 		DECLARE bookNo INT;
 		DECLARE foreignID INT;
-		DECLARE betsAffected INT;
 		DECLARE eventToModify INT;
 		DECLARE doBetsNeedUpdate INT;
 		DECLARE eventStatus INT;
@@ -743,19 +772,23 @@ def create_delete_event(client)
 						FROM Event
 						WHERE EventID = removeEventID);
 
+		SET foreignID = (SELECT ParticipantID
+							FROM Event
+							WHERE EventID = removeEventID);
+
 
 		DELETE FROM Event
 		WHERE EventID = removeEventID;
 
-		IF(eventType = 'house') THEN
+		IF(eventType = 'throne') THEN
 			UPDATE House
 			SET WonThrone = 0
 			WHERE HouseID = foreignID;
 
 			SET eventToModify =	(SELECT MIN(E.EventID)
-									FROM HouseOption AS H, BetOption AS B, Event AS E
+									FROM ThroneOption AS T, BetOption AS B, Event AS E
 									WHERE H.OptionID = B.OptionID AND H.HouseID = E.ParticipantID
-										  AND E.Description = 'house' AND E.BookOccurred = bookNo);
+										  AND E.Description = 'throne' AND E.BookOccurred = bookNo);
 		ELSEIF(eventType = 'death') THEN
 			UPDATE Person
 			SET IsAlive = 1
@@ -776,31 +809,30 @@ def create_delete_event(client)
 										  AND E.Description = 'resurrect' AND E.BookOccurred = bookNo);
 		END IF;
 
-
-		/* 
-		Removed event caused some bets to be resolved, but no other event will leave these
-		bets resolved. So, make bets unresolved (available) again.
-		*/
-		IF(wereBetsAffected = 1 AND eventToModify IS NULL) THEN
-			CALL turn_on_bet_availability(eventType, bookNo, eventStatus);
-
-		ELSEIF(wereBetsAffected = 1 AND eventToModify IS NOT NULL) THEN
-
-		/* Removed event caused some bets to be resolved, but now another event will resolve
-		these bets instead. Leave bets resolved, but update the event to reflect what it did. */
-			UPDATE Event
-			SET ChangedBets = 1
-			WHERE EventID = eventToModify;
-
-		END IF;
-
-		IF(eventStatus != 0) THEN
-			SET output = -3;
-			LEAVE ThisProc;
-		END IF;
-
 		SET output = 0;
 	END")
+
+		# /* 
+		# Removed event caused some bets to be resolved, but no other event will leave these
+		# bets resolved. So, make bets unresolved (available) again.
+		# */
+		# IF(wereBetsAffected = 1 AND eventToModify IS NULL) THEN
+		# 	CALL turn_on_bet_availability(eventType, bookNo, eventStatus);
+
+		# ELSEIF(wereBetsAffected = 1 AND eventToModify IS NOT NULL) THEN
+
+		# /* Removed event caused some bets to be resolved, but now another event will resolve
+		# these bets instead. Leave bets resolved, but update the event to reflect what it did. */
+		# 	UPDATE Event
+		# 	SET ChangedBets = 1
+		# 	WHERE EventID = eventToModify;
+
+		# END IF;
+
+		# IF(eventStatus != 0) THEN
+		# 	SET output = -3;
+		# 	LEAVE ThisProc;
+		# END IF;
 end
 
 def create_stored_procedures(client)

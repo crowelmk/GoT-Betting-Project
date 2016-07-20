@@ -113,8 +113,8 @@ homecontent{
   <br>
   <homecontent>
 	  Victory
-	  <button type="button" id = "houseButton" onclick="visitPage('/houseBet')" class="betbutton">Show Options</button>
-	  <div id = "houseText" class = "statusText" visibility: hidden>
+	  <button type="button" id = "throneButton" onclick="visitPage('/throneBet')" class="betbutton">Show Options</button>
+	  <div id = "throneText" class = "statusText" visibility: hidden>
 	  </div>
   </homecontent>
   <br>
@@ -152,21 +152,21 @@ homecontent{
   	function updateHouseDisplay() {
   		var betIsAvailable = 
   		<%= require_relative 'testEndToEnd.rb'
-  			check_bet_availability(client, 'house', 6) %>;
+  			check_bet_availability(client, 'throne', 6) %>;
 
   		if(betIsAvailable) {
-  			document.getElementById("houseButton").style.visibility = "visible";
-  			document.getElementById("houseText").style.visibility = "hidden";
+  			document.getElementById("throneButton").style.visibility = "visible";
+  			document.getElementById("throneText").style.visibility = "hidden";
   		}
   		else {
   			var betWinner =
   			"<%= require_relative 'testEndToEnd.rb'
-  				grab_bet_winner(client, 'house', 6) %>";
+  				grab_bet_winner(client, 'throne', 6) %>";
   			alert(betIsAvailable);
-  			document.getElementById("houseButton").style.visibility = "hidden";
-  			document.getElementById("houseText").innerHTML
+  			document.getElementById("throneButton").style.visibility = "hidden";
+  			document.getElementById("throneText").innerHTML
   								= "Bet Finished <br> Winner: " + betWinner;
-  			document.getElementById("houseText").style.visibility = "visible";
+  			document.getElementById("throneText").style.visibility = "visible";
   		}
   	}
 

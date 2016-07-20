@@ -1,6 +1,70 @@
 #!/usr/bin/ruby
 require 'mysql2'
 
+def obtain_bet_history(client, bet_type, email)
+	result = nil
+	toReturn = []
+
+	email.gsub("@", "\@")
+	case bet_type
+	when "Death"
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
+									FROM Bet AS B, Event AS E, DeathOption AS D
+									WHERE B.OptionID = D.OptionID 
+										  AND B.ResolvingEventID = E.EventID
+										  AND B.UserEmail = '%s')
+								UNION
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+									FROM Bet AS B, BetOption AS P, DeathOption AS D
+									WHERE B.OptionID = D.OptionID
+										  AND B.ResolvingEventID IS NULL
+										  AND B.UserEmail = '%s')" % [email, email])
+	when "Throne"
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
+								FROM Bet AS B, Event AS E, ThroneOption AS T
+									WHERE B.OptionID = T.OptionID
+										  AND (B.ResolvingEventID = E.EventID)
+										  AND B.UserEmail = '%s')
+								UNION
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+									FROM Bet AS B, BetOption AS P, ThroneOption AS T
+									WHERE B.OptionID = T.OptionID 
+										  AND B.ResolvingEventID IS NULL
+										  AND B.UserEmail = '%s')" % [email, email])
+	when "Resurrect"
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
+									FROM Bet AS B, Event AS E, ResurrectOption AS R
+									WHERE B.OptionID = R.OptionID 
+										  AND (B.ResolvingEventID = E.EventID)
+										  AND B.UserEmail = '%s')
+								UNION
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+									FROM Bet AS B, BetOption AS P, ResurrectOption AS R
+									WHERE B.OptionID = R.OptionID,
+										  AND B.ResolvingEventID IS NULL
+										  AND B.UserEmail = '%s')" % [email, email])
+	when "All"
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
+									FROM Bet AS B, Event AS E
+									WHERE B.ResolvingEventID = E.EventID
+										  AND B.UserEmail = '%s')
+								UNION
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+									FROM Bet AS B, BetOption AS P
+									WHERE B.OptionID = P.OptionID
+										  AND B.ResolvingEventID IS NULL
+										  AND B.UserEmail = '%s')" % [email, email])
+	end
+
+	result.each do |val|
+		# Convert big decimals to displayable floats
+		val[4] = val[4].to_s("F")
+		toReturn << val
+	end
+
+	return toReturn
+end
+
 def check_bet_availability(client, bet_type, book_num)
 	numAvailable = 0
 	result = client.query("SELECT COUNT(*)
@@ -24,7 +88,7 @@ def grab_bet_winner(client, bet_type, book_num)
 								FROM DeathOption AS D, BetOption AS B, Event AS E
 								WHERE D.OptionID = B.OptionID
 									  AND D.CharID = E.ParticipantID
-									  AND B.BetType = E.Description
+									  AND B.BetType = E.EventType
 									  AND B.BookNo = #{book_num}
 									  AND E.ChangedBets = 1")
 
@@ -40,13 +104,13 @@ def grab_bet_winner(client, bet_type, book_num)
 		result2.each do |val|
 			winner = val[0]
 		end
-	when "house"
+	when "throne"
 		winningOptionID = 0
-		result = client.query("SELECT H.OptionID
-								FROM HouseOption AS H, BetOption AS B, Event AS E
-								WHERE H.OptionID = B.OptionID
-									  AND H.HouseID = E.ParticipantID 
-									  AND B.BetType = E.Description
+		result = client.query("SELECT T.OptionID
+								FROM ThroneOption AS T, BetOption AS B, Event AS E
+								WHERE T.OptionID = B.OptionID
+									  AND T.HouseID = E.ParticipantID 
+									  AND B.BetType = E.EventType
 									  AND B.BookNo = #{book_num}
 									  AND E.ChangedBets = 1")
 
@@ -55,9 +119,9 @@ def grab_bet_winner(client, bet_type, book_num)
 		end
 
 		result2 = client.query("SELECT S.HouseName
-									FROM HouseOption AS H, House As S
-									WHERE H.OptionID = #{winningOptionID}
-										  AND H.HouseID = S.HouseID")
+									FROM ThroneOption AS T, House As H
+									WHERE T.OptionID = #{winningOptionID}
+										  AND T.HouseID = H.HouseID")
 
 		result2.each do |val|
 			winner = val[0]
@@ -68,7 +132,7 @@ def grab_bet_winner(client, bet_type, book_num)
 								FROM ResurrectOption AS R, BetOption AS B, Event AS E
 								WHERE R.OptionID = B.OptionID
 									  AND R.CharID = E.ParticipantID 
-									  AND B.BetType = E.Description
+									  AND B.BetType = E.EventType
 									  AND B.BookNo = #{book_num}
 									  AND E.ChangedBets = 1")
 
@@ -106,7 +170,7 @@ def obtainCombatChart(client)
 	return toReturn
 end
 
-def add_house_bet(bet_option, client, email, bet_amount) 
+def add_throne_bet(bet_option, client, email, bet_amount) 
 	optionID = 0
 	nameToQuery = ""
 	case bet_option
@@ -123,8 +187,8 @@ def add_house_bet(bet_option, client, email, bet_amount)
 	end
 
 	result = client.query("SELECT OptionID
-							FROM HouseOption AS H
-							WHERE H.HouseID = (SELECT HouseID
+							FROM Throneption AS T
+							WHERE T.HouseID = (SELECT HouseID
 												FROM House
 												WHERE HouseName = '#{nameToQuery}')")
 
@@ -205,7 +269,6 @@ def add_resurrect_bet(bet_option, client, email, bet_amount)
 
 	statement.execute(optionID, email, bet_amount)
 end
-
 
 # begin
 #  # connect to the MySQL server
