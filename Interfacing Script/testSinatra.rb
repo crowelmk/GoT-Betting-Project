@@ -14,23 +14,21 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	# erb :'home.html', :locals => {'client' => @@client}
+	erb :'home.html', :locals => {'client' => @@client}
 	# erb :'updateChoice.html'
 	# erb :'chart.html', :locals => {'client' => @@client}
-	erb :'history.html', :locals => {'client' => @@client}
-
 end
 
 get '/throneBet' do
-	erb :'throneBet.html'
+	erb :'throneBet.html', :locals => {'client' => @@client}
 end
 
 get '/deathBet' do
-	erb :'deathBet.html'
+	erb :'deathBet.html', :locals => {'client' => @@client}
 end
 
 get '/resurrectBet' do
-	erb :'resBet.html'
+	erb :'resBet.html', :locals => {'client' => @@client}
 end
 
 get '/placeBet/:betCategory&:betChoice' do
@@ -58,6 +56,9 @@ post '/addBet' do
 	redirect '/'
 end
 
+get '/history' do
+	erb :'history.html', :locals => {'client' => @@client}
+end
 post '/obtainBetHistory' do
 	require_relative 'views/testEndtoEnd.rb'
 

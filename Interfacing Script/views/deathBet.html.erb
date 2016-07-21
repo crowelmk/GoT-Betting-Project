@@ -55,6 +55,12 @@ body {
 	float: right;
 }
 
+.oddsText {
+	position: absolute;
+	bottom: 0px;
+    left: 0px;
+    font-size: 30px;
+}
 
 homecontent{
 	display: block;
@@ -99,15 +105,50 @@ homecontent{
 
 
 <div id = "content">
-  <homecontent>Arya Stark<button type="button" onclick="visitPage('placeBet/death&aryastark')" class="betbutton">Place Bet</button></homecontent>
+  <homecontent>
+  Arya Stark
+  <button type="button" onclick="visitPage('placeBet/death&aryastark')" class="betbutton">Place Bet</button>
+  <div class = "oddsText">
+  	  Odds: <%= require_relative 'testEndtoEnd.rb'
+  			get_odds(client, "death", 6, "Arya Stark")%> / 1
+  </div>
+  </homecontent>
   <br>
-  <homecontent>Jon Snow<button type="button" onclick="visitPage('placeBet/death&jonsnow')" class="betbutton">Place Bet</button></homecontent>
+  <homecontent>
+  Daenerys Targaryen
+  <button type="button" onclick="visitPage('placeBet/death&daenerystargaryen')" class="betbutton">Place Bet</button>
+  <div class = "oddsText">
+  	  Odds: <%= require_relative 'testEndtoEnd.rb'
+  			get_odds(client, "death", 6, "Daenerys Targaryen")%> / 1
+  </div>
+  </homecontent>
   <br>
-  <homecontent>Sansa Stark<button type="button" onclick="visitPage('placeBet/death&sansastark')" class="betbutton">Place Bet</button></homecontent>
+  <homecontent>
+  Jaime Lannister
+  <button type="button" onclick="visitPage('placeBet/death&jaimelannister')" class="betbutton">Place Bet</button>
+  <div class = "oddsText">
+  	  Odds: <%= require_relative 'testEndtoEnd.rb'
+  			get_odds(client, "death", 6, "Jaime Lannister")%> / 1
+  </div>
+  </homecontent>
   <br>
-  <homecontent>Theon Greyjoy<button type="button" onclick="visitPage('placeBet/death&theongreyjoy')" class="betbutton">Place Bet</button></homecontent>
+  <homecontent>
+  Theon Greyjoy (Reek)
+  <button type="button" onclick="visitPage('placeBet/death&theongreyjoy')" class="betbutton">Place Bet</button>
+  <div class = "oddsText">
+  	  Odds: <%= require_relative 'testEndtoEnd.rb'
+  			get_odds(client, "death", 6, "Theon Greyjoy")%> / 1
+  </div>
+  </homecontent>
   <br>
-  <homecontent>Ramsay Snow<button type="button" onclick="visitPage('placeBet/death&ramsaysnow')" class="betbutton">Place Bet</button></homecontent>
+  <homecontent>
+  Ramsay Snow
+  <button type="button" onclick="visitPage('placeBet/death&ramsaysnow')" class="betbutton">Place Bet</button>
+  <div class = "oddsText">
+  	  Odds: <%= require_relative 'testEndtoEnd.rb'
+  			get_odds(client, "death", 6, "Ramsay Snow")%> / 1
+  </div>
+  </homecontent>
 </div>
 
 </body>

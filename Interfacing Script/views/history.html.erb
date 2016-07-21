@@ -146,7 +146,7 @@ homecontent{
 	color: #ABABAB;
 }
 </style>
-<title>test</title>
+<title>A Winner Is Coming</title>
 </head>
 </html>
 
@@ -155,8 +155,8 @@ homecontent{
 <img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
 <body>
 <ul>
-  <li><a class="active" href="#home">Home</a></li>
-  <li><a href="#history">History</a></li>
+  <li><a href="/">Home</a></li>
+  <li><a class="active" href="/history">History</a></li>
   <li><a href="#statistics">Statistics</a></li>
   <li style="float:right"><a href="#about">About</a></li>
 </ul>
@@ -184,13 +184,13 @@ homecontent{
         document.getElementById("title").innerHTML = target;
     }
 
-    function obtainBetHistory(historyOption, email) {
+    function changeDisplayedHistory(historyOption, email) {
         var request = new XMLHttpRequest();
         var params = "option=" + historyOption + "&email=" + email;
         request.onreadystatechange = function() {
             if(request.readyState == XMLHttpRequest.DONE && request.status == 200) {
                 var myarr = JSON.parse(request.responseText);
-                modifyTableContents(myarr)
+                modifyPageContents(myarr)
             }
         }
         request.open("POST", "/obtainBetHistory", true);
@@ -210,26 +210,51 @@ homecontent{
     <th>Winner</th>
     <th>Status</th>
     <th>Money Bet</th>
+    <th>Money Result</th>
   </tr>
 </table>
 
 <script>
-function modifyTableContents(arr) {
+function modifyPageContents(arr) {
     var tab, tr, td, tn, row, col;
+    var moneyArr = [];
 
     tab = document.getElementsByTagName('table')[0];
     for (row = 0; row < arr.length; row++)
     {
         tr = document.createElement('tr');
-        for (col = 0; col < arr[row].length; col++) 
+        for (col = 0; col < arr[row].length - 1; col++) 
         {
             td = document.createElement('td');
             tn = document.createTextNode(arr[row][col]);
             td.appendChild(tn);
             tr.appendChild(td);
         }
+
+        var status = arr[row][3]
+        var earnings = 0.00
+        if(status == "win") {
+            var odds = arr[row][5];
+            var betAmount = arr[row][4];
+            earnings = betAmount * odds + betAmount;
+            moneyArr.push(earnings);
+        }
+        else if(status == "loss"){
+            var betAmount = arr[row][4];
+            earnings = 0 - (betAmount);
+            moneyArr.push(earnings);
+        }
+
+        td = document.createElement('td');
+        tn = document.createTextNode(earnings);
+        td.appendChild(tn);
+        tr.appendChild(td);
+
+
         tab.appendChild(tr);
     }
+
+    modifyChart(moneyArr);
 }
 </script>
 </div>
@@ -237,13 +262,18 @@ function modifyTableContents(arr) {
 
 <canvas id="myChart" width="400" height="400"></canvas>
 <script>
-function modifyChart() {
+function modifyChart(moneyArr) {
     var ctx = document.getElementById("myChart");
 
-    var arr = [
-        [10035,10046,10058,10074,11380],
-        [25,25,-50,30,-25]
-    ];
+    var matchingIndexArr = [];
+    for (var i = 0; i < moneyArr.length; i++)
+    {
+        matchingIndexArr.push(i + 1)
+    }
+
+    var arr = [];
+    arr.push(matchingIndexArr);
+    arr.push(moneyArr);
 
     var color = new Array(arr[0].length);
     for(var i = 0; i < arr[1].length; i++)
@@ -301,7 +331,7 @@ function modifyChart() {
             alert('Email must be of form blah@blah.com, try again.');
         }
         else {
-            var returned = obtainBetHistory(historyOption, email);
+            var returned = changeDisplayedHistory(historyOption, email);
         }
     }
 </script>

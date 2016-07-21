@@ -25,9 +25,6 @@ def create_database(client, dbName)
 end
 
 def drop_tables(client)
-	# client.query("DROP TABLE IF EXISTS DeathBet")
-	# client.query("DROP TABLE IF EXISTS RFDBet")
-	# client.query("DROP TABLE IF EXISTS HouseBet")
 	client.query("DROP TABLE IF EXISTS Bet")
 	client.query("DROP TABLE IF EXISTS CombatLog")
 	client.query("DROP TABLE IF EXISTS Person")
@@ -58,9 +55,13 @@ def create_tables_and_views(client)
 					Name varchar(80) NOT NULL, 
 					Gender INT NOT NULL, 
 					Title varchar(60), 
+					DeathProbability DECIMAL(10, 3) NOT NULL,
+					Popularity DECIMAL(10, 6) NOT NULL,
+					BookOfDeath SMALLINT,
 					FOREIGN KEY(HouseID) REFERENCES House(HouseID),
 					CHECK(IsAlive = 0 OR IsAlive = 1),
-					CHECK(Gender = 0 OR Gender = 1))")
+					CHECK(Gender = 0 OR Gender = 1),
+					CHECK(DeathProbability <= 1))")
 
 	client.query("CREATE TABLE IF NOT EXISTS Battle (
 					BattleID INT PRIMARY KEY, 
@@ -92,6 +93,7 @@ def create_tables_and_views(client)
 					BetType VARCHAR(80) NOT NULL,
 					BookNo SMALLINT NOT NULL,
 					Availability SMALLINT NOT NULL,
+					Odds DECIMAL(10, 2),
 					CHECK(Availability = 0 OR Availability = 1),
 					CHECK(BookOccurred > 0 AND BookOccurred < 11))")
 
@@ -138,18 +140,139 @@ def create_tables_and_views(client)
 							WHERE H.HouseID = P.HouseID AND P.IsAlive = 0
 							GROUP BY HouseID")
 
-	client.query("CREATE OR REPLACE VIEW HouseBattleStats (
+	client.query("CREATE OR REPLACE VIEW HouseBattleWinStats (
 					HouseID, HouseName, NumBattlesWon)
 					AS SELECT H.HouseID, H.HouseName, COUNT(BattleID)
-							FROM House AS H, CombatLog L
+							FROM House AS H, CombatLog AS L
 							WHERE H.HouseID = L.HouseID AND result = 'win'
+							GROUP BY HouseID")
+
+	client.query("CREATE OR REPLACE VIEW HouseBattleInvolvedStats (
+					HouseID, HouseName, NumBattlesInvolved)
+					AS SELECT H.HouseID, H.HouseName, COUNT(BattleID)
+							FROM House AS H, CombatLog AS L
+							WHERE H.HouseID = L.HouseID
 							GROUP BY HouseID")
 end
 
+def calculate_and_insert_death_odds(client, charIDs, bookNo)
+	charDeathProb = Hash.new()
+	totalProb = 0
+	charIDs.each do |id|
+		result = client.query("SELECT DeathProbability
+								FROM Person
+								WHERE CharID = #{id}")
+		
+		result.each do |val|
+			charDeathProb.merge!({id => val[0]})
+			totalProb += val[0]
+		end
+	end
+
+	charDeathProb.each do |id, probability|
+		relativeProbability = (probability / totalProb).to_f
+		odds = 1 / (relativeProbability) - 1
+		odds = odds.round
+
+		client.query("UPDATE BetOption
+					  SET Odds = #{odds}
+					  WHERE BookNo = #{bookNo}
+					  		AND OptionID = (SELECT OptionID
+						  						FROM DeathOption
+						  						WHERE CharID = #{id})")
+	end
+end
+
+def calculate_and_insert_throne_odds(client, houseIDs, bookNo) 
+	houseWinProb = Hash.new()
+	totalProb = 0
+	houseIDs.each do |id|
+		result = client.query("SELECT W.NumBattlesWon, I.NumBattlesInvolved,
+									D.NumMembersDead, M.NumTotalMembers
+								FROM HouseBattleWinStats AS W, HouseDeathStats AS D, 
+									 HouseMembership AS M, HouseBattleInvolvedStats AS I
+								WHERE W.HouseID = #{id}
+									  AND D.HouseID = #{id}
+									  AND M.HouseID = #{id}
+									  AND I.HouseID = #{id}")
+		
+		currentNumBattleWon = 0
+		currentNumBattleInvolved = 0
+		currentNumDead = 0
+		currentNumMembers = 0
+
+		result.each do |val|
+			currentNumBattleWon = val[0]
+			currentNumBattleInvolved = val[1]
+			currentNumDead = val[2]
+			currentNumMembers = val[3]
+		end
+
+		winDecimal = currentNumBattleWon.to_f / currentNumBattleInvolved.to_f
+		deathDecimal = currentNumDead.to_f / currentNumMembers.to_f
+
+		rawProbability = winDecimal * 0.4 + (1 - deathDecimal) * 0.6
+		totalProb += rawProbability
+		houseWinProb.merge!({id => rawProbability})\
+	end
+
+	houseWinProb.each do |id, probability|
+		relativeProbability = (probability / totalProb).to_f
+		odds = 1 / (relativeProbability) - 1
+		odds = odds.round
+
+		client.query("UPDATE BetOption
+					  SET Odds = #{odds}
+					  WHERE BookNo = #{bookNo}
+					  		AND OptionID = (SELECT OptionID
+						  						FROM ThroneOption
+						  						WHERE HouseID = #{id})")
+	end
+end
+
+def calculate_and_insert_resurrect_odds(client, charIDs, bookNo)
+	charResProb = Hash.new()
+	totalProb = 0
+	charIDs.each do |id|
+		result = client.query("SELECT Popularity, BookOfDeath
+								FROM Person
+								WHERE CharID = #{id}")
+		
+		currentPopularity = 0
+		bookOfDeath = 0
+		result.each do |val|
+			currentPopularity = val[0]
+			bookOfDeath = val[1]
+		end
+
+		numBooksSinceDeath = bookNo - bookOfDeath
+
+		rawProbability = currentPopularity / numBooksSinceDeath
+		charResProb.merge!({id => rawProbability})
+		totalProb += rawProbability
+	end
+
+	charResProb.each do |id, probability|
+		relativeProbability = (probability / totalProb).to_f
+		odds = 1 / (relativeProbability) - 1
+		odds = odds.round
+
+		client.query("UPDATE BetOption
+					  SET Odds = #{odds}
+					  WHERE BookNo = #{bookNo}
+					  		AND OptionID = (SELECT OptionID
+						  						FROM ResurrectOption
+						  						WHERE CharID = #{id})")
+	end
+end
+
 def populate_option_tables(client)
+	bookNo = 6
+
+	# Populate options on which living character will be resurrected
 	deathQuery = client.query("SELECT CharID
 								FROM Person
-								WHERE Name IN ('Arya Stark', 'Jon Snow', 'Sansa Stark', 
+								WHERE Name IN ('Arya Stark', 'Daenerys Targaryen', 'Jaime Lannister', 
 								'Ramsay Snow', 'Theon Greyjoy')")
 
 	deathIDs = []
@@ -158,10 +281,13 @@ def populate_option_tables(client)
 	end
 
 	deathIDs.each do |id|
-		client.query("CALL insert_bet_option('death', #{id}, 6, @output_value)")
+		client.query("CALL insert_bet_option('death', #{id}, #{bookNo}, @output_value)")
 	end
 
+	calculate_and_insert_death_odds(client, deathIDs, bookNo)
 
+
+	# Populate options on which dead character will be resurrected
 	resurrectQuery = client.query("SELECT CharID
 									FROM Person
 									WHERE Name IN ('Eddard Stark', 'Joffrey Baratheon', 
@@ -173,26 +299,31 @@ def populate_option_tables(client)
 	end
 
 	resurrectIDs.each do |id|
-		client.query("CALL insert_bet_option('resurrect', #{id}, 6, @output_value)")
+		client.query("CALL insert_bet_option('resurrect', #{id},  #{bookNo}, @output_value)")
 	end
 
+	calculate_and_insert_resurrect_odds(client, resurrectIDs, bookNo)
 
+
+	# Populate options on which house will claim throne
 	houseQuery = client.query("SELECT HouseID
 									FROM House
 									WHERE HouseName IN ('Lannister', 'Stark', 
-									'Night''s Watch', 'Targaryen', 'Baratheon')")
+									'Night''s Watch', 'Tully', 'Baratheon')")
 	houseIDs = []
 	houseQuery.each do |val|
 		houseIDs << val[0]
 	end
 
 	houseIDs.each do |id|
-		client.query("CALL insert_bet_option('throne', #{id}, 6, @output_value)")
+		client.query("CALL insert_bet_option('throne', #{id}, #{bookNo}, @output_value)")
 	end
+
+	calculate_and_insert_throne_odds(client, houseIDs, bookNo)
 end
 
 def populate_tables(client, people, stats, battles) 
-	# Create a list of names from the prediction csv file. We only want to add names that appear both in
+	# Create a list of names from the prediction csv file. We only want to add names that appear in both
 	# this "prediction" file and those that appear in the "character" file. Using a mapping allows us
 	# to quickly check the keys for matches, which will then be inserted into the Person table.
 	personNamesHash = Hash.new()
@@ -212,8 +343,8 @@ def populate_tables(client, people, stats, battles)
         # do anything.
 		houseName = person[1]
 
-		# Given our source's formatting, there may be two names such as "Stark" and
-		# "House Stark." To avoid this issue, we will each name by " " and, if the
+		# Given our source's formatting, there may be two identical names like "Stark" and
+		# "House Stark." To avoid this issue, we will split each name by " " and, if the
 		# first part is "House", remove the first part.
 		houseNameSplit = houseName.split(" ")
 		if houseNameSplit[0] == "House"
@@ -275,11 +406,19 @@ def populate_tables(client, people, stats, battles)
 				houseName = houseNameSplit[1]
 			end
 
-			personIsAlive = person[2] != nil ? 0 : 1
+			bookOfDeath = person[3]
+			if bookOfDeath == nil
+				bookOfDeath = -1
+			end
+			personIsAlive = person[3] != nil ? 0 : 1
+			probability = stats[statRow][4]
+			popularity = stats[statRow][31]
 
 			houseId = houseIdMapping.fetch(houseName)
-	        client.query("INSERT INTO Person(CharID, IsAlive, HouseID, Name, Gender, Title) 
-	        VALUES(#{currentIdValue}, #{personIsAlive}, #{houseId}, '#{name}', #{gender}, '#{title}')")
+	        client.query("INSERT INTO Person(CharID, IsAlive, HouseID, Name, 
+	        	Gender, Title, DeathProbability, Popularity, BookOfDeath) 
+	        VALUES(#{currentIdValue}, #{personIsAlive}, #{houseId}, '#{name}',
+	         #{gender}, '#{title}', #{probability}, #{popularity}, #{bookOfDeath})")
 
 			currentIdValue = currentIdValue + 1
 		end
@@ -288,6 +427,7 @@ def populate_tables(client, people, stats, battles)
 	# Insert values into Battle table
 	currentIdValue = 1
 	battles.each do |battle|
+		# Insert battle into Battle
 		battleName = battle[0]
 		battleName = remove_bad_char(battleName)
 
@@ -299,13 +439,10 @@ def populate_tables(client, people, stats, battles)
 		client.query("INSERT INTO Battle (BattleID, BattleName, City, Year)
 			          VALUE(#{currentIdValue}, '#{battleName}' ,'#{location}',#{year})")
 
-		currentIdValue = currentIdValue + 1
-	end
 
-	# Insert values into CombatLog table (M:N relationship Houses : Battles)
-	currentBattleId = 1
-	battles.each do |battle|
-		# Compile a list of all attackers from battle document
+		# Insert participating houses into CombatLog
+
+		# Compile a list of all attackers from battles document
 		firstAttackIndex = 5
 		lastAttackIndex = 8
 		attackers = []
@@ -315,7 +452,7 @@ def populate_tables(client, people, stats, battles)
 			end
 		end
 
-		# Compile a list of all defenders from battle document
+		# Compile a list of all defenders from battles document
 		firstDefendIndex = 9
 		lastDefendIndex = 12
 		defenders = []
@@ -339,9 +476,10 @@ def populate_tables(client, people, stats, battles)
 					result = "inconclusive"
 				end
 				client.query("INSERT INTO CombatLog()
-	        	VALUES(#{houseId}, #{currentBattleId}, '#{result}')")
+	        	VALUES(#{houseId}, #{currentIdValue}, '#{result}')")
 			end
 		end
+
 
 		# Obtain the necessary data to insert each defender into the CombatLog table.
 		defenders.each do |name|
@@ -358,11 +496,12 @@ def populate_tables(client, people, stats, battles)
 				end
 
 				client.query("INSERT INTO CombatLog(HouseID, BattleID, Result)
-	        	VALUES(#{houseId}, #{currentBattleId}, '#{result}')")
+	        	VALUES(#{houseId}, #{currentIdValue}, '#{result}')")
 			end
 		end
-		currentBattleId = currentBattleId+ 1
+		currentIdValue = currentIdValue + 1
 	end
+
 
 	# Populate options with our initial options
 	populate_option_tables(client);

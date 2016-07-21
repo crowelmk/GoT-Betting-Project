@@ -1,6 +1,47 @@
 #!/usr/bin/ruby
 require 'mysql2'
 
+def get_odds(client, bet_type, bookNo, name)
+	odds = 0
+	case bet_type
+	when "death"
+		result = client.query("SELECT B.Odds
+									FROM Person AS P, BetOption AS B, DeathOption AS D
+									WHERE P.CharID = D.CharID
+										  AND B.OptionID = D.OptionID
+										  AND P.Name = '%s'
+										  AND B.BookNo = %d" % [name, bookNo])
+
+		result.each do |val|
+			odds = val[0]
+		end
+	when "throne"
+		result = client.query("SELECT B.Odds
+								FROM House AS H, BetOption AS B, ThroneOption AS T
+								WHERE H.HouseID = T.HouseID
+									  AND B.OptionID = T.OptionID
+									  AND H.HouseName = '%s'
+									  AND B.BookNo = %d" % [name, bookNo])
+
+		result.each do |val|
+			odds = val[0]
+		end
+	when "resurrect"
+		result = client.query("SELECT B.Odds
+									FROM Person AS P, BetOption AS B, ResurrectOption AS R
+									WHERE P.CharID = R.CharID
+										  AND B.OptionID = R.OptionID
+										  AND P.Name = '%s'
+										  AND B.BookNo = %d" % [name, bookNo])
+
+		result.each do |val|
+			odds = val[0]
+		end
+	end
+
+	return odds.to_f
+end
+
 def obtain_bet_history(client, bet_type, email)
 	result = nil
 	toReturn = []
@@ -8,48 +49,62 @@ def obtain_bet_history(client, bet_type, email)
 	email.gsub("@", "\@")
 	case bet_type
 	when "Death"
-		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
-									FROM Bet AS B, Event AS E, DeathOption AS D
-									WHERE B.OptionID = D.OptionID 
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, 
+									   B.Status, B.BetAmount
+									FROM Bet AS B, Event AS E, BetOption AS P
+									WHERE B.OptionID = P.OptionID 
+										  AND P.BetType = 'death'
 										  AND B.ResolvingEventID = E.EventID
 										  AND B.UserEmail = '%s')
 								UNION
-								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
-									FROM Bet AS B, BetOption AS P, DeathOption AS D
-									WHERE B.OptionID = D.OptionID
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name,
+										B.Status, B.BetAmount
+									FROM Bet AS B, BetOption AS P
+									WHERE B.OptionID = P.OptionID 
+										  AND P.BetType = 'death'
 										  AND B.ResolvingEventID IS NULL
 										  AND B.UserEmail = '%s')" % [email, email])
 	when "Throne"
-		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
-								FROM Bet AS B, Event AS E, ThroneOption AS T
-									WHERE B.OptionID = T.OptionID
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, 
+									   B.Status, B.BetAmount, P.Odds
+								FROM Bet AS B, Event AS E, BetOption AS P
+									WHERE B.OptionID = P.OptionID
+										  AND P.BetType = 'throne'
 										  AND (B.ResolvingEventID = E.EventID)
 										  AND B.UserEmail = '%s')
 								UNION
 								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
-									FROM Bet AS B, BetOption AS P, ThroneOption AS T
-									WHERE B.OptionID = T.OptionID 
+									FROM Bet AS B, BetOption AS P
+									WHERE B.OptionID = P.OptionID
+										  AND P.BetType = 'throne' 
 										  AND B.ResolvingEventID IS NULL
 										  AND B.UserEmail = '%s')" % [email, email])
 	when "Resurrect"
-		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
-									FROM Bet AS B, Event AS E, ResurrectOption AS R
-									WHERE B.OptionID = R.OptionID 
-										  AND (B.ResolvingEventID = E.EventID)
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, 
+									   B.Status, B.BetAmount, P.Odds
+									FROM Bet AS B, Event AS E, BetOption AS P
+									WHERE B.OptionID = P.OptionID
+										  AND P.BetType = 'resurrect'
+										  AND B.ResolvingEventID = E.EventID
 										  AND B.UserEmail = '%s')
 								UNION
-								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
-									FROM Bet AS B, BetOption AS P, ResurrectOption AS R
-									WHERE B.OptionID = R.OptionID,
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, 
+										B.Status, B.BetAmount, P.Odds
+									FROM Bet AS B, BetOption AS P
+									WHERE B.OptionID = P.OptionID,
+										  AND P.BetType = 'resurrect'
 										  AND B.ResolvingEventID IS NULL
 										  AND B.UserEmail = '%s')" % [email, email])
 	when "All"
-		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, B.Status, B.BetAmount
-									FROM Bet AS B, Event AS E
+		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName,
+									   B.Status, B.BetAmount, P.Odds
+									FROM Bet AS B, Event AS E, BetOption AS P
 									WHERE B.ResolvingEventID = E.EventID
+										  AND B.OptionID = P.OptionID
 										  AND B.UserEmail = '%s')
 								UNION
-								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, 
+										B.BetAmount, P.Odds
 									FROM Bet AS B, BetOption AS P
 									WHERE B.OptionID = P.OptionID
 										  AND B.ResolvingEventID IS NULL
@@ -59,6 +114,7 @@ def obtain_bet_history(client, bet_type, email)
 	result.each do |val|
 		# Convert big decimals to displayable floats
 		val[4] = val[4].to_s("F")
+		# Put whole row into array
 		toReturn << val
 	end
 
@@ -118,7 +174,7 @@ def grab_bet_winner(client, bet_type, book_num)
 			winningOptionID = val[0]
 		end
 
-		result2 = client.query("SELECT S.HouseName
+		result2 = client.query("SELECT H.HouseName
 									FROM ThroneOption AS T, House As H
 									WHERE T.OptionID = #{winningOptionID}
 										  AND T.HouseID = H.HouseID")
@@ -180,14 +236,14 @@ def add_throne_bet(bet_option, client, email, bet_amount)
 		nameToQuery = "Stark"
 	when "watch"
 		nameToQuery = "Night''s Watch"
-	when "targaryen"
-		nameToQuery = "Targaryen"
+	when "tully"
+		nameToQuery = "Tully"
 	when "baratheon"
 		nameToQuery = "Baratheon"
 	end
 
 	result = client.query("SELECT OptionID
-							FROM Throneption AS T
+							FROM ThroneOption AS T
 							WHERE T.HouseID = (SELECT HouseID
 												FROM House
 												WHERE HouseName = '#{nameToQuery}')")
@@ -209,10 +265,10 @@ def add_death_bet(bet_option, client, email, bet_amount)
 	case bet_option
 	when "aryastark"
 		nameToQuery = "Arya Stark"
-	when "jonsnow"
-		nameToQuery = "Jon Snow"
-	when "sansastark"
-		nameToQuery = "Sansa Stark"
+	when "daenerystargaryen"
+		nameToQuery = "Daenerys Targaryen"
+	when "jaimelannister"
+		nameToQuery = "Jaime Lannister"
 	when "ramsaysnow"
 		nameToQuery = "Ramsay Snow"
 	when "theongreyjoy"
@@ -237,7 +293,7 @@ def add_death_bet(bet_option, client, email, bet_amount)
 end
 
 def add_resurrect_bet(bet_option, client, email, bet_amount) 
-	charID = 0
+	optionID = 0
 	nameToQuery = ""
 	case bet_option
 	when "nedstark"
