@@ -204,14 +204,6 @@ homecontent{
 
 <div style="overflow-x:auto;">
 <table>
-  <tr>
-    <th>Email</th>
-    <th>Bet Type</th>
-    <th>Winner</th>
-    <th>Status</th>
-    <th>Money Bet</th>
-    <th>Money Result</th>
-  </tr>
 </table>
 
 <script>
@@ -220,6 +212,40 @@ function modifyPageContents(arr) {
     var moneyArr = [];
 
     tab = document.getElementsByTagName('table')[0];
+
+    tr = document.createElement('tr');
+    td = document.createElement('td');
+    tn = document.createTextNode('Email');
+    td.appendChild(tn);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    tn = document.createTextNode('Bet Type');
+    td.appendChild(tn);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    tn = document.createTextNode('Winner');
+    td.appendChild(tn);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    tn = document.createTextNode('Status');
+    td.appendChild(tn);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    tn = document.createTextNode('Money Bet');
+    td.appendChild(tn);
+    tr.appendChild(td);
+    td = document.createElement('td');
+    tn = document.createTextNode('Money Result');
+    td.appendChild(tn);
+    tr.appendChild(td);
+
+    tab.appendChild(tr);
+
+
+
+
+
+    tab.innerHTML = "";
     for (row = 0; row < arr.length; row++)
     {
         tr = document.createElement('tr');
