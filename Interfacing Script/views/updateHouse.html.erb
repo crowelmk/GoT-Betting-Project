@@ -78,30 +78,37 @@ body {
 
 <br>
 <div id = "content">
-  <form name = "add" action="/addBet" method="post" id = "form">
-    Email: <input type="text" name="email">
+  <form name = "add" action="/performHouseUpdate" method="post" id = "form">
+    House Name (*mandatory): <br>
+    <input type="text" name="houseName">
     <br>
-    Bet: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="bet">
+    Current Book Number (*mandatory): <br>
+    <input type="text" name="bookNo">
     <br>
-    <input type = "hidden" name = "betCategory" value = <%= betCategory %> >
-    <input type = "hidden" name = "betChoice" value = <%= betChoice %> >
-    <input type="submit">
+    Won Throne (0 for no, 1 for yes): <br>
+    <input type="text" name="wonThrone">
+    <br>
+
+    <input type="submit" name = "submit">
   </form>
+
 <script>
+    function isPositiveInt(num) {
+      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+    }
+
     var element = document.querySelector("form");
     element.addEventListener("submit", function(event) {
-      var email = document.forms["add"]["email"].value;
-      var bet = document.forms["add"]["bet"].value;
-      var emailRegex = new RegExp(".+@.+\..+");
-      var badBetRegex = new RegExp("\s+");
+      var houseName = document.forms["add"]["houseName"].value;
+      var bookNo = document.forms["add"]["bookNo"].value;
 
-      if(!email.match(emailRegex)) {
+      if(houseName == "" || !isNaN(houseName)) {
         event.preventDefault();
-        alert('Email must be of form blah@blah.com, try again.');
+        alert('Please enter a valid house name.');
       }
-      if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+      if (!isPositiveInt(bookNo)) {
         event.preventDefault();
-        alert('Bet must be a dollar amount, try again.');
+        alert('Book number must be a valid positive integer, try again.');
       }
     })
   </script>

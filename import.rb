@@ -635,6 +635,8 @@ def create_update_person(client)
 	    IN houseName VARCHAR(80),
 	    IN newTitle VARCHAR(60),
 	    IN newIsAlive SMALLINT,
+	    IN newDeathProb DECIMAL(10, 3),
+	    IN newPopularity DECIMAL(10, 6),
 	   	IN currentBookNo INT,
 	    OUT output INT)
 
@@ -642,15 +644,21 @@ def create_update_person(client)
 		DECLARE currentIsAlive INT;
 		DECLARE matchingCharID INT;
 		DECLARE matchingHouseID INT;
+		DECLARE deathBookNo INT;
 		DECLARE optionCheck INT;
 		DECLARE newEventID INT;
-		DECLARE newEventType INT;
+		DECLARE newEventType VARCHAR(20);
 		DECLARE updateStatus INT;
 		DECLARE wereBetsAffected INT;
 
 		SET matchingCharID = (SELECT CharID
 								FROM Person
 								Where Name = charName);
+
+		SET currentIsAlive = (SELECT CharID
+								FROM Person
+								WHERE CharID = matchingCharID);
+
 
 		/* Validate input. */
 
@@ -659,23 +667,19 @@ def create_update_person(client)
 		 	LEAVE ThisProc;
 		END IF;
 
-		SET currentIsAlive = (SELECT IsAlive
+		IF(newIsAlive != 0 AND newIsAlive != 1) THEN
+			SET newIsAlive = (SELECT IsAlive
 								FROM Person
 								WHERE CharID = matchingCharID);
-
-		IF(currentIsAlive = 1 AND newIsAlive = 0 AND currentBookNo = -1) THEN
-			SET output = -2;
-			LEAVE ThisProc;
 		END IF;
 
-		IF(houseName IS NULL) THEN
+		SET matchingHouseID = (SELECT H.HouseID
+								FROM House AS H
+								Where H.HouseName = houseName);
+		IF(matchingHouseID IS NULL) THEN
 			SET matchingHouseID = (SELECT HouseID
 								FROM Person
 								WHERE CharID = matchingCharID);
-		ELSE
-			SET matchingHouseID = (SELECT H.HouseID
-									FROM House AS H
-									Where H.HouseName = houseName);
 		END IF;
 
 		IF(newTitle IS NULL) THEN
@@ -684,13 +688,36 @@ def create_update_person(client)
 								WHERE CharID = matchingCharID);
 		END IF;
 
+		IF(!(newDeathProb > 0 AND newDeathProb <= 1)) THEN
+			SET newDeathProb = (SELECT DeathProbability
+									FROM Person
+									WHERE CharID = matchingCharID);
+		END IF;
+
+		IF(!(newPopularity > 0 AND newPopularity <= 1)) THEN
+			SET newPopularity = (SELECT Popularity
+									FROM Person
+									WHERE CharID = matchingCharID);
+		END IF;
+
+		IF(newIsAlive = 0) THEN
+			SET deathBookNo = currentBookNo;
+		ELSE
+			SET deathBookNo = (SELECT BookOfDeath
+									FROM Person
+									WHERE CharID = matchingCharID);
+		END IF;
+
 
 		/* Perform UPDATE. */
 
 		UPDATE Person
 	    SET HouseID = matchingHouseID,
 	    	Title = newTitle,
-	    	IsAlive = newIsAlive
+	    	IsAlive = newIsAlive,
+	    	DeathProbability = newDeathProb,
+	    	Popularity = newPopularity,
+	    	BookOfDeath = deathBookNo
 	    WHERE CharID = matchingCharID;
 
 
@@ -796,7 +823,7 @@ end
 def create_update_house(client)
 	client.query("DROP procedure IF EXISTS update_house")
 	client.query("CREATE PROCEDURE update_house(
-	    IN newHouseName VARCHAR(80),
+	    IN inputHouseName VARCHAR(80),
 	    IN newWonThrone SMALLINT,
 	   	IN currentBookNo INT,
 	    OUT output INT)
@@ -809,18 +836,24 @@ def create_update_house(client)
 		DECLARE checkOption INT;
 		DECLARE updateStatus INT;
 		DECLARE wereBetsAffected INT;
-
-		SET oldWonThrone = (SELECT WonThrone
-								FROM House
-								WHERE HouseID = matchingHouseID);
+		DECLARE newEventID INT;
 
 		SET matchingHouseID = (SELECT HouseID
 								FROM House
-								WHERE HouseName = newhouseName);
+								WHERE HouseName = inputHouseName);
 
 		SET throneWinnersCount = (SELECT COUNT(*)
 									FROM House
 									Where WonThrone = 1);
+
+		SET oldWonThrone = (SELECT WonThrone
+								FROM House
+								WHERE HouseID = matchingHouseID);
+		/* Validate input */
+
+		IF(newWonThrone != 0 AND newWonThrone != 1) THEN
+			SET newWonThrone = oldWonThrone;
+		END IF;
 
 		IF(throneWinnersCount > 0 AND newWonThrone = 1 AND oldWonThrone != newWonThrone) THEN
 			SET output = -1;
@@ -832,6 +865,9 @@ def create_update_house(client)
 			LEAVE ThisProc;
 		END IF;
 
+
+		/* Perform update */
+
 		UPDATE House
 		SET WonThrone = newWonThrone
 		WHERE HouseID = matchingHouseID;
@@ -839,7 +875,8 @@ def create_update_house(client)
 	    IF(oldWonThrone != newWonThrone AND newWonThrone = 1) THEN
 	    	SET optionCheck = (SELECT COUNT(*)
 	    						FROM ThroneOption AS T, BetOption AS B
-	    						WHERE R.OptionID = B.OptionID AND R.CharID = matchingCharID
+	    						WHERE T.OptionID = B.OptionID 
+	    							  AND T.HouseID = matchingHouseID
 	    							  AND B.BookNo = currentBookNo);
 
 	    	IF(optionCheck = 0) THEN
@@ -855,7 +892,9 @@ def create_update_house(client)
 		    END IF;
 
 	    	INSERT INTO Event(ParticipantID, EventType, ParticipantName, BookOccurred, ChangedBets)
-	    	VALUES(matchingCharID, 'throne', currentBookNo, wereBetsAffected);
+	    	VALUES(matchingHouseID, 'throne', inputHouseName, currentBookNo, wereBetsAffected);
+	   
+	    	SET newEventID = LAST_INSERT_ID();
 	    END IF;
 
 	    /* If bets were affected, then we need to ensure that those bets know which
@@ -873,6 +912,69 @@ def create_update_house(client)
 	END")
 end
 
+def create_update_bet_results(client)
+	client.query("DROP procedure IF EXISTS update_bet_results")
+	client.query("CREATE PROCEDURE update_bet_results(
+	    IN removedEventID INT,
+	    IN newResolvingEventID INT,
+	    IN currentEventType VARCHAR(20),
+	    IN currentBookNo INT,
+	    OUT output INT)
+
+	ThisProc:BEGIN
+
+		UPDATE Bet
+		SET ResolvingEventID = newResolvingEventID
+		WHERE ResolvingEventID = removedEventID;
+
+		IF(currentEventType = 'throne') THEN
+			UPDATE Bet
+	    	SET Status = 'win'
+	    	WHERE OptionID IN (SELECT T.OptionID
+	    						FROM ThroneOption AS T, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND T.CharID = E.ParticipantID);
+
+	    	UPDATE Bet
+	    	SET Status = 'loss'
+	    	WHERE OptionID IN (SELECT T.OptionID
+	    						FROM ThroneOption AS T, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND T.CharID != E.ParticipantID);
+		ELSEIF(currentEventType = 'death') THEN
+			UPDATE Bet
+	    	SET Status = 'win'
+	    	WHERE OptionID IN (SELECT D.OptionID
+	    						FROM DeathOption AS D, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND D.CharID = E.ParticipantID);
+
+			UPDATE Bet
+	    	SET Status = 'loss'
+	    	WHERE OptionID IN (SELECT D.OptionID
+	    						FROM DeathOption AS D, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND D.CharID != E.ParticipantID);
+		ELSE
+			UPDATE Bet
+	    	SET Status = 'win'
+	    	WHERE OptionID IN (SELECT R.OptionID
+	    						FROM ResurrectOption AS R, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND R.CharID = E.ParticipantID);
+
+			UPDATE Bet
+	    	SET Status = 'loss'
+	    	WHERE OptionID IN (SELECT R.OptionID
+	    						FROM ResurrectOption AS R, Event AS E
+	    						WHERE ResolvingEventID = E.EventID 
+	    							  AND R.CharID != E.ParticipantID);
+		END IF;
+
+		SET output = 0;
+	END")
+end
+
 def create_delete_event(client)
 	client.query("DROP procedure IF EXISTS delete_event")
 	client.query("CREATE PROCEDURE delete_event(
@@ -882,7 +984,7 @@ def create_delete_event(client)
 	ThisProc:BEGIN
 		DECLARE eventCount INT;
 		DECLARE wereBetsAffected INT;
-		DECLARE eventType VARCHAR(30);
+		DECLARE currentEventType VARCHAR(20);
 		DECLARE bookNo INT;
 		DECLARE foreignID INT;
 		DECLARE eventToModify INT;
@@ -903,9 +1005,9 @@ def create_delete_event(client)
 									FROM Event
 									WHERE EventID = removeEventID);
 
-		SET eventType = (SELECT Description
-							FROM Event
-							WHERE EventID = removeEventID);
+		SET currentEventType = (SELECT EventType
+									FROM Event
+									WHERE EventID = removeEventID);
 
 		SET bookNo = (SELECT BookOccurred
 						FROM Event
@@ -915,20 +1017,19 @@ def create_delete_event(client)
 							FROM Event
 							WHERE EventID = removeEventID);
 
-
 		DELETE FROM Event
 		WHERE EventID = removeEventID;
 
-		IF(eventType = 'throne') THEN
+		IF(currentEventType = 'throne') THEN
 			UPDATE House
 			SET WonThrone = 0
 			WHERE HouseID = foreignID;
 
 			SET eventToModify =	(SELECT MIN(E.EventID)
 									FROM ThroneOption AS T, BetOption AS B, Event AS E
-									WHERE H.OptionID = B.OptionID AND H.HouseID = E.ParticipantID
-										  AND E.Description = 'throne' AND E.BookOccurred = bookNo);
-		ELSEIF(eventType = 'death') THEN
+									WHERE T.OptionID = B.OptionID AND T.HouseID = E.ParticipantID
+										  AND E.EventType = 'throne' AND E.BookOccurred = bookNo);
+		ELSEIF(currentEventType = 'death') THEN
 			UPDATE Person
 			SET IsAlive = 1
 			WHERE CharID = foreignID;
@@ -936,7 +1037,7 @@ def create_delete_event(client)
 			SET eventToModify =	(SELECT MIN(E.EventID)
 									FROM DeathOption AS D, BetOption AS B, Event AS E
 									WHERE D.OptionID = B.OptionID AND D.CharID = E.ParticipantID
-										  AND E.Description = 'death' AND E.BookOccurred = bookNo);
+										  AND E.EventType = 'death' AND E.BookOccurred = bookNo);
 		ELSE
 			UPDATE Person
 			SET IsAlive = 0
@@ -945,33 +1046,42 @@ def create_delete_event(client)
 			SET eventToModify =	(SELECT MIN(E.EventID)
 									FROM ResurrectOption AS R, BetOption AS B, Event AS E
 									WHERE R.OptionID = B.OptionID AND R.CharID = E.ParticipantID
-										  AND E.Description = 'resurrect' AND E.BookOccurred = bookNo);
+										  AND E.EventType = 'resurrect' AND E.BookOccurred = bookNo);
+		END IF;
+
+
+		/* 
+		Removed event caused some bets to be resolved, but no other event will leave these
+		bets resolved. So, make bets unresolved (available) again and update status of 
+		associated bets.
+		*/
+		IF(wereBetsAffected = 1 AND eventToModify IS NULL) THEN
+			CALL turn_on_bet_availability(currentEventType, bookNo, eventStatus);
+
+			UPDATE Bet
+			SET ResolvingEventID = NULL,
+				Status = 'pending'
+			WHERE ResolvingEventID = removeEventID;
+
+		ELSEIF(wereBetsAffected = 1 AND eventToModify IS NOT NULL) THEN
+		/* Removed event caused some bets to be resolved, but now another event will resolve
+		these bets instead. Leave bets resolved, but update the event and associated bets
+		to reflect the change. */
+			UPDATE Event
+			SET ChangedBets = 1
+			WHERE EventID = eventToModify;
+
+			CALL update_bet_results(removeEventID, eventToModify, currentEventType, 
+			bookNo, eventStatus);
+		END IF;
+
+		IF(eventStatus < 0) THEN
+			SET output = -3;
+			LEAVE ThisProc;
 		END IF;
 
 		SET output = 0;
 	END")
-
-		# /* 
-		# Removed event caused some bets to be resolved, but no other event will leave these
-		# bets resolved. So, make bets unresolved (available) again.
-		# */
-		# IF(wereBetsAffected = 1 AND eventToModify IS NULL) THEN
-		# 	CALL turn_on_bet_availability(eventType, bookNo, eventStatus);
-
-		# ELSEIF(wereBetsAffected = 1 AND eventToModify IS NOT NULL) THEN
-
-		# /* Removed event caused some bets to be resolved, but now another event will resolve
-		# these bets instead. Leave bets resolved, but update the event to reflect what it did. */
-		# 	UPDATE Event
-		# 	SET ChangedBets = 1
-		# 	WHERE EventID = eventToModify;
-
-		# END IF;
-
-		# IF(eventStatus != 0) THEN
-		# 	SET output = -3;
-		# 	LEAVE ThisProc;
-		# END IF;
 end
 
 def create_stored_procedures(client)
@@ -980,6 +1090,7 @@ def create_stored_procedures(client)
 	create_insert_bet_option(client)
 	create_turn_off_bet_availability(client)
 	create_turn_on_bet_availability(client)
+	create_update_bet_results(client)
 	create_update_person(client)
 	create_update_house(client)
 	create_delete_event(client)

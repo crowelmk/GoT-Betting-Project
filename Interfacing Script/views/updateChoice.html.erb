@@ -17,7 +17,28 @@ ul {
     background-color: #333;
 }	
 
-li a {
+.bar
+{
+	float: none;
+	background-color: #333;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 20px 200px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.bar:hover 
+{
+	text-decoration: underline;
+	color: rgba(255,255,0,1);
+
+}
+
+
+
+
+.nav {
 	float: left;
     display: block;
     color: white;
@@ -27,22 +48,17 @@ li a {
 	font-family: GoTFont;
 }
 
-li a:hover:not(.active) {
+.nav:hover {
 	background-color: #111;
 	color: #EBDE36;
 }
-
-li b {
-	background-color: #333;
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 20px 200px;
-    text-decoration: none;
-}
-
 .active {
     background-color: #4CAF50;
+    color: white;
+}
+.active:hover {
+    background-color: #4CAF50;
+    color: white;
 }
 body {
 	display: block;
@@ -82,7 +98,7 @@ homecontent{
 
 </style>
 <script src = "http://code.jquery.com/jquery-1.7.2.min.js"></script> 
-<title>test</title>
+<title>A Winner Is Coming</title>
 </head>
 </html>
 
@@ -91,25 +107,24 @@ homecontent{
 <img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
 <body>
 <ul>
-  <li><a class = "active" href = "/">Home</a></li>
-  <li><a href="#history">History</a></li>
-  <li><a href="#statistics">Statistics</a></li>
-  <li style="float:right"><a href="#about">About</a></li>
+  <li><a class = "nav" href = "/">Home</a></li>
+  <li><a class = "nav" href="/history">History</a></li>
+  <li><a class = "nav" href="/statistics">Statistics</a></li>
+  <li><a class = "nav active" href="/updateMenu">Update</a></li>
 </ul>
 <br>
 
-<script>
-  function visitPage(url) {
-    window.location.href = url;
-  }
-</script>
 <div id = "content">
-
-  <li><b href="#one">Update Person</b></li>
+  <li><a class="bar" href="/updatePerson">Update Person</a></li>
   <br>
-  <li><b href="#two">Update House</b></li>
+  <li><a class="bar" href="/updateHouse">Update House</a></li>
   <br>
-  <li><b href="#three">Delete Event</b></li>
+  <li><a class="bar" href="/deleteEvent">
+  Undo Last Major Update <br>
+  (i.e. character death, character resurrection, or throne victory)
+  </b></a></li>
+  <br>
+<!--   <li><a class="bar" href="betForm.html" target="_blank">Delete Event</a></li> -->
 </div>
 
 </body>

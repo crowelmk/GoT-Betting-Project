@@ -157,8 +157,8 @@ homecontent{
 <ul>
   <li><a href="/">Home</a></li>
   <li><a class="active" href="/history">History</a></li>
-  <li><a href="#statistics">Statistics</a></li>
-  <li style="float:right"><a href="#about">About</a></li>
+  <li><a href="/statistics">Statistics</a></li>
+  <li><a href="/updateMenu">Update</a></li>
 </ul>
 <br>
 
@@ -213,6 +213,8 @@ function modifyPageContents(arr) {
 
     tab = document.getElementsByTagName('table')[0];
 
+    // Remove old stuff and add headers for columns
+    tab.innerHTML = "";
     tr = document.createElement('tr');
     td = document.createElement('td');
     tn = document.createTextNode('Email');
@@ -241,11 +243,6 @@ function modifyPageContents(arr) {
 
     tab.appendChild(tr);
 
-
-
-
-
-    tab.innerHTML = "";
     for (row = 0; row < arr.length; row++)
     {
         tr = document.createElement('tr');

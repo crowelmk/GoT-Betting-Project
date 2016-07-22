@@ -64,3 +64,45 @@ post '/obtainBetHistory' do
 
 	obtain_bet_history(@@client, params[:option], params[:email]).to_json
 end
+
+get '/statistics' do
+	erb :'statistics.html', :locals => {'client' => @@client}
+end
+
+get '/updateMenu' do
+	erb :'updateChoice.html'
+end
+
+get '/updatePerson' do
+	erb :'updatePerson.html'
+end
+
+post '/performPersonUpdate' do
+	require_relative 'views/testEndToEnd.rb'
+
+	update_person(@@client, params[:charName], params[:bookNo], params[:houseName], 
+		params[:title], params[:isAlive], params[:deathProb], params[:popularity])
+	redirect '/updateMenu'
+end
+
+get '/updateHouse' do
+	erb :'updateHouse.html'
+end
+
+post '/performHouseUpdate' do
+	require_relative 'views/testEndToEnd.rb'
+
+	update_house(@@client, params[:houseName], params[:bookNo], params[:wonThrone])
+	redirect '/updateMenu'
+end
+
+get '/deleteEvent' do
+	erb :'deleteEvent.html'
+end
+
+post '/performDeleteEvent' do
+	require_relative 'views/testEndToEnd.rb'
+
+	delete_event(@@client, params[:name], params[:bookNo], params[:eventType])
+	redirect '/updateMenu'
+end

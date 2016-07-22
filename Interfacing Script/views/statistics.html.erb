@@ -2,6 +2,7 @@
 <html>
 <head>
 	<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
+    <script src = "http://code.jquery.com/jquery-1.7.2.min.js"> </script>
 <meta charset="utf-8">
 <style>
 @font-face
@@ -46,18 +47,62 @@ body {
 	margin: 0 auto;
 }
 
-
-
 #banner{
 	display: block;	
 }
 
-.betbutton{
-	position: relative;
-	top: 0px;
-	float: right;
+/* Style The Dropdown Button */
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    width: 160px;
+    text-align: left;
 }
 
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover 
+{
+    background-color: rgba(0,255,0,0.6);
+    z-index: 1;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
 
 homecontent{
 	display: block;
@@ -77,7 +122,7 @@ homecontent{
 	color: #ABABAB;
 }
 </style>
-<title>test</title>
+<title>A Winner Is Coming</title>
 </head>
 </html>
 
@@ -86,61 +131,221 @@ homecontent{
 <img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
 <body>
 <ul>
-  <li><a class="active" href="#home">Home</a></li>
-  <li><a href="#history">History</a></li>
-  <li><a href="#statistics">Statistics</a></li>
-  <li style="float:right"><a href="#about">About</a></li>
+  <li><a href = "/">Home</a></li>
+  <li><a href="/history">History</a></li>
+  <li><a class = "active" href="/statistics">Statistics</a></li>
+  <li><a href="/updateMenu">Update</a></li>
 </ul>
 <br>
 
-<canvas id="myChart" width="400" height="400"></canvas>
+<div class = "dropdown">
+  <button id="title" class="dropbtn">Select Statistic</button>
+  <div class="dropdown-content">
+    <a onclick ="updateDisplay('House Battle Wins')">House Battle Wins</a>
+    <a onclick ="updateDisplay('House Membership')">House Membership</a>
+    <a onclick ="updateDisplay('House Death')">House Deaths</a>
+    <a onclick ="updateDisplay('Most Popular Characters')">Most Popular Characters</a>
+    <a onclick ="updateDisplay('Likely to Die Characters')">Likely to Die Characters</a>
+  </div>
+</div>
+
 <script>
-var ctx = document.getElementById("myChart");
-var result = <%= 
-require_relative 'testEndToEnd.rb'
-obtainCombatChart(client)
-%>;
+function setAllButOneHidden(leaveVisible) {
+    document.getElementById("winChart").style.visibility = "hidden";
+    document.getElementById("membershipChart").style.visibility = "hidden";
+    document.getElementById("deathChart").style.visibility = "hidden";
+    document.getElementById("popularityChart").style.visibility = "hidden";
+    document.getElementById("deathProbChart").style.visibility = "hidden";
 
-
-var myChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: result[0],
-        datasets: [{
-            label: 'Battle Victories by House',
-            data: result[1],
-            backgroundColor: 'rgba(153, 102, 255, 0.5)'
-            // backgroundColor: [
-            //     'rgba(255, 99, 132, 0.2)',
-            //     'rgba(54, 162, 235, 0.2)',
-            //     'rgba(255, 206, 86, 0.2)',
-            //     'rgba(75, 192, 192, 0.2)',
-            //     'rgba(153, 102, 255, 0.2)',
-            //     'rgba(255, 159, 64, 0.2)'
-            // ],
-            // borderColor: [
-            //     'rgba(255,99,132,1)',
-            //     'rgba(54, 162, 235, 1)',
-            //     'rgba(255, 206, 86, 1)',
-            //     'rgba(75, 192, 192, 1)',
-            //     'rgba(153, 102, 255, 1)',
-            //     'rgba(255, 159, 64, 1)'
-            // ],
-            // borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero:true
-                }
-            }]
-        }
+    var idToMakeVisible = "";
+    switch(leaveVisible) {
+        case "House Membership":
+            idToMakeVisible = "membershipChart";
+            break;
+        case "House Death":
+            idToMakeVisible = "deathChart";
+            break;
+        case "Most Popular Characters":
+            idToMakeVisible = "popularityChart";
+            break;
+        case "Likely to Die Characters":
+            idToMakeVisible = "deathProbChart";
+            break;
+        default:
+            idToMakeVisible = "winChart";
+            break;
     }
-});
-</script>
-	
 
+    document.getElementById(idToMakeVisible).style.visibility = "visible";
+}
+
+function updateDisplay(target) {
+    document.getElementById("title").innerHTML = target;
+
+    setAllButOneHidden(target);
+}
+</script>
+<br>
+<br>
+
+<canvas id="winChart" width="400" height="400", visibility: hidden></canvas>
+
+<canvas id="membershipChart" width="400" height="400", visibility: hidden></canvas>
+
+<canvas id="deathChart" width="400" height="400", visibility: hidden></canvas>
+
+<canvas id="popularityChart" width="400" height="400", visibility: hidden></canvas>
+
+<canvas id="deathProbChart" width="400" height="400", visibility: hidden></canvas>	
+
+
+<script>
+function populateWinChart() {
+    var chart = document.getElementById("winChart");
+    var arr = <%=  require_relative 'testEndToEnd.rb'
+                      obtainWinsData(client)%>;
+
+
+    var result = new Chart(chart, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Battle Victories by House',
+                data: arr[1],
+                backgroundColor: 'rgba(153, 102, 255, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+function populateMembershipChart() {
+    var chart = document.getElementById("membershipChart");
+    var arr = <%=  require_relative 'testEndToEnd.rb'
+                      obtainMembershipData(client)%>;
+
+    var result = new Chart(chart, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Number of Members by House',
+                data: arr[1],
+                backgroundColor: 'rgba(255, 102, 0, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+function populateDeathChart() {
+    var chart = document.getElementById("deathChart");
+    var arr = <%=  require_relative 'testEndToEnd.rb'
+                      obtainDeathData(client)%>;
+
+
+    var result = new Chart(chart, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Number of Deaths by House',
+                data: arr[1],
+                backgroundColor: 'rgba(255, 102, 0, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+function populatePopularityChart() {
+    var chart = document.getElementById("popularityChart");
+    var arr = <%=  require_relative 'testEndToEnd.rb'
+                      obtainPopularityData(client)%>;
+
+
+    var result = new Chart(chart, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Popularity by Characters',
+                data: arr[1],
+                backgroundColor: 'rgba(255, 102, 0, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+function populateDeathProbChart() {
+    var chart = document.getElementById("deathProbChart");
+    var arr = <%=  require_relative 'testEndToEnd.rb'
+                      obtainDeathProbData(client)%>;
+
+
+    var result = new Chart(chart, {
+        type: 'bar',
+        data: {
+            labels: arr[0],
+            datasets: [{
+                label: 'Death Probability by House',
+                data: arr[1],
+                backgroundColor: 'rgba(255, 102, 0, 0.5)'
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+}
+
+window.onload = function() {
+    populateWinChart();
+    populateMembershipChart();
+    populateDeathChart();
+    populatePopularityChart();
+    populateDeathProbChart();
+}
+</script>
 </body>
 </html>

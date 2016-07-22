@@ -50,7 +50,7 @@ def obtain_bet_history(client, bet_type, email)
 	case bet_type
 	when "Death"
 		result = client.query("(SELECT B.UserEmail, E.EventType, E.ParticipantName, 
-									   B.Status, B.BetAmount
+									   B.Status, B.BetAmount, P.Odds
 									FROM Bet AS B, Event AS E, BetOption AS P
 									WHERE B.OptionID = P.OptionID 
 										  AND P.BetType = 'death'
@@ -58,7 +58,7 @@ def obtain_bet_history(client, bet_type, email)
 										  AND B.UserEmail = '%s')
 								UNION
 								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name,
-										B.Status, B.BetAmount
+										B.Status, B.BetAmount, P.Odds
 									FROM Bet AS B, BetOption AS P
 									WHERE B.OptionID = P.OptionID 
 										  AND P.BetType = 'death'
@@ -73,7 +73,8 @@ def obtain_bet_history(client, bet_type, email)
 										  AND (B.ResolvingEventID = E.EventID)
 										  AND B.UserEmail = '%s')
 								UNION
-								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, B.Status, B.BetAmount
+								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name,
+									    B.Status, B.BetAmount, P.Odds
 									FROM Bet AS B, BetOption AS P
 									WHERE B.OptionID = P.OptionID
 										  AND P.BetType = 'throne' 
@@ -91,7 +92,7 @@ def obtain_bet_history(client, bet_type, email)
 								(SELECT B.UserEmail, P.BetType, 'NONE' AS Name, 
 										B.Status, B.BetAmount, P.Odds
 									FROM Bet AS B, BetOption AS P
-									WHERE B.OptionID = P.OptionID,
+									WHERE B.OptionID = P.OptionID
 										  AND P.BetType = 'resurrect'
 										  AND B.ResolvingEventID IS NULL
 										  AND B.UserEmail = '%s')" % [email, email])
@@ -209,11 +210,9 @@ def grab_bet_winner(client, bet_type, book_num)
 	return "#{winner}"
 end
 
-def obtainCombatChart(client)
-	result = client.query("SELECT HouseName, COUNT(*) AS Wins
-                               FROM House AS h, CombatLog AS c
-                               WHERE h.HouseID = c.HouseID AND c.Result = 'win'
-                               GROUP BY h.HouseName")
+def obtainWinsData(client)
+	result = client.query("SELECT HouseName, NumBattlesWon
+                               FROM HouseBattleWinStats")
 	toReturn = [];
 	names = [];
 	wins = [];
@@ -221,8 +220,90 @@ def obtainCombatChart(client)
 		names << val[0]
 		wins << val[1]
 	end
+
 	toReturn << names
 	toReturn << wins
+	return toReturn
+end
+
+def obtainMembershipData(client)
+	result = client.query("SELECT HouseName, NumTotalMembers
+                               FROM HouseMembership")
+	toReturn = [];
+	names = [];
+	members = [];
+	result.each do |val|
+		names << val[0]
+		members << val[1]
+	end
+	toReturn << names
+	toReturn << members
+	return toReturn
+end
+
+def obtainDeathData(client)
+	result = client.query("SELECT HouseName, NumMembersDead
+                               FROM HouseDeathStats")
+	toReturn = [];
+	names = [];
+	deaths = [];
+	result.each do |val|
+		names << val[0]
+		deaths << val[1]
+	end
+	toReturn << names
+	toReturn << deaths
+	return toReturn
+end
+
+def obtainPopularityData(client)
+	result = client.query("SELECT Name, Popularity
+                               FROM Person
+                               ORDER BY Popularity DESC")
+	toReturn = []
+	names = []
+	popularity = []
+
+	numEntries = 0
+	result.each do |val|
+		names << val[0]
+		popularity << (val[1].to_f * 100).round
+
+		numEntries = numEntries + 1
+
+		if numEntries > 40
+			break;
+		end
+	end
+
+	toReturn << names
+	toReturn << popularity
+	return toReturn
+end
+
+def obtainDeathProbData(client)
+	result = client.query("SELECT Name, DeathProbability
+                               FROM Person
+                               ORDER BY DeathProbability DESC")
+	toReturn = []
+	names = []
+	deathProb = []
+
+	numEntries = 0
+	result.each do |val|
+		names << val[0]
+		deathProb << (val[1].to_f * 100).round
+
+		numEntries = numEntries + 1
+
+		if numEntries > 40
+			break;
+		end
+	end
+	
+	toReturn << names
+	toReturn << deathProb
+
 	return toReturn
 end
 
@@ -326,19 +407,50 @@ def add_resurrect_bet(bet_option, client, email, bet_amount)
 	statement.execute(optionID, email, bet_amount)
 end
 
-# begin
-#  # connect to the MySQL server
-#  dbh = DBI.connect("DBI:Mysql:testBase:127.0.0.1", 
-#                     "testuser", "mysqltest")
-#  # get server version string and display it
-#  row = dbh.select_one("SELECT VERSION()")
-#  puts "Server version: " + row[0]
-# rescue DBI::DatabaseError => e
-#  puts "An error occurred"
-#  puts "Error code:    #{e.err}"
-#  puts "Error message: #{e.errstr}"
-# ensure
-#  # disconnect from server
-#  dbh.disconnect if dbh
-# end
-# 
+def update_person(client, char_name, bookNo, house_name, title, 
+	isAlive, deathProb, popularity)
+	puts "#{isAlive}, #{bookNo}"
+	if isAlive == ""
+		isAlive = 2
+	end
+
+	if deathProb == ""
+		deathProb = -1
+	end
+
+	if popularity == ""
+		popularity = -1
+	end
+
+
+	client.query("CALL update_person('%s', '%s', '%s', %d, %.3f, %.6f, %d, @output_value)" % [char_name, house_name, title, isAlive, deathProb, popularity, bookNo])
+end
+
+def update_house(client, house_name, bookNo, wonThrone)
+	if wonThrone == ""
+		wonThrone = 2
+	end
+
+
+	client.query("CALL update_house('%s', %d, %d, @output_value)" % [house_name, wonThrone, bookNo])
+end
+
+def delete_event(client, name, bookNo, event_type)
+	eventID = 0
+	result = client.query("SELECT MAX(EventID)
+							FROM Event
+							WHERE ParticipantName = '%s'
+								  AND BookOccurred = %d
+								  AND EventType = '%s'" % [name, bookNo, event_type])
+
+	result.each do |val|
+		eventID = val[0]
+	end
+
+	if eventID != nil
+		client.query("CALL delete_event(#{eventID}, @output_value)")
+		puts "Deletion was successful!"
+	else
+		puts "No matching event found, deletion failed."
+	end
+end

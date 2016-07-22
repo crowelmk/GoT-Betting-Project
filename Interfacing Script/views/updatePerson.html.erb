@@ -78,30 +78,49 @@ body {
 
 <br>
 <div id = "content">
-  <form name = "add" action="/addBet" method="post" id = "form">
-    Email: <input type="text" name="email">
+  <form name = "add" action="/performPersonUpdate" method="post" id = "form">
+    Character Name (*mandatory): <br>
+    <input type="text" name="charName">
     <br>
-    Bet: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="bet">
+    Current Book Number (*mandatory): <br>
+    <input type="text" name="bookNo">
     <br>
-    <input type = "hidden" name = "betCategory" value = <%= betCategory %> >
-    <input type = "hidden" name = "betChoice" value = <%= betChoice %> >
-    <input type="submit">
+    House Name: <br>
+    <input type="text" name="houseName">
+    <br>
+    Title: <br>
+    <input type="text" name="title">
+    <br>
+    Is Alive (0 for dead, 1 for alive): <br>
+    <input type="text" name="isAlive">
+    <br>
+    Likelihood of Death (decimal of form 0.ddd): <br>
+    <input type="text" name="deathProb">
+    <br>
+    Popularity (decimal of form 0.dddddd or 1): <br>
+    <input type="text" name="popularity">
+    <br>
+
+    <input type="submit" name = "submit">
   </form>
+
 <script>
+    function isPositiveInt(num) {
+      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+    }
+
     var element = document.querySelector("form");
     element.addEventListener("submit", function(event) {
-      var email = document.forms["add"]["email"].value;
-      var bet = document.forms["add"]["bet"].value;
-      var emailRegex = new RegExp(".+@.+\..+");
-      var badBetRegex = new RegExp("\s+");
+      var charName = document.forms["add"]["charName"].value;
+      var bookNo = document.forms["add"]["bookNo"].value;
 
-      if(!email.match(emailRegex)) {
+      if(charName == "" || !isNaN(charName)) {
         event.preventDefault();
-        alert('Email must be of form blah@blah.com, try again.');
+        alert('Please enter a valid character name.');
       }
-      if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+      if (!isPositiveInt(bookNo)) {
         event.preventDefault();
-        alert('Bet must be a dollar amount, try again.');
+        alert('Book number must be a valid positive integer, try again.');
       }
     })
   </script>

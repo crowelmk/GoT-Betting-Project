@@ -78,30 +78,43 @@ body {
 
 <br>
 <div id = "content">
-  <form name = "add" action="/addBet" method="post" id = "form">
-    Email: <input type="text" name="email">
+  <form name = "delete" action="/performDeleteEvent" method="post" id = "form">
+    Name (*mandatory): <br>
+    <input type="text" name="name">
     <br>
-    Bet: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="bet">
+    Event Type - death, resurrect, or throne (*mandatory): <br>
+    <input type="text" name="eventType">
     <br>
-    <input type = "hidden" name = "betCategory" value = <%= betCategory %> >
-    <input type = "hidden" name = "betChoice" value = <%= betChoice %> >
-    <input type="submit">
+    Book Event Occurred (*mandatory): <br>
+    <input type="text" name="bookNo">
+    <br>
+
+
+    <input type="submit" name = "submit">
   </form>
+
 <script>
+    function isPositiveInt(num) {
+      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+    }
+
     var element = document.querySelector("form");
     element.addEventListener("submit", function(event) {
-      var email = document.forms["add"]["email"].value;
-      var bet = document.forms["add"]["bet"].value;
-      var emailRegex = new RegExp(".+@.+\..+");
-      var badBetRegex = new RegExp("\s+");
+      var name = document.forms["delete"]["name"].value;
+      var eventType = document.forms["delete"]["eventType"].value
+      var bookNo = document.forms["delete"]["bookNo"].value;
 
-      if(!email.match(emailRegex)) {
+      if(name == "" || !isNaN(name)) {
         event.preventDefault();
-        alert('Email must be of form blah@blah.com, try again.');
+        alert('Please enter a valid name.');
       }
-      if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+      if(eventType != "death" && eventType != "resurrect" && eventType != "throne") {
         event.preventDefault();
-        alert('Bet must be a dollar amount, try again.');
+        alert('Please enter a valid event type.');
+      }
+      if (!isPositiveInt(bookNo)) {
+        event.preventDefault();
+        alert('Book number must be a valid positive integer, try again.');
       }
     })
   </script>
