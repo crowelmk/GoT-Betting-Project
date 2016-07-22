@@ -149,34 +149,59 @@ homecontent{
   </div>
 </div>
 
+
+<br>
+<br>
+
+<div id = "wins" display: none> 
+    <canvas id="winChart" width="400" height="400"></canvas>
+</div>
+
+<div id = "members" display: none>
+    <canvas id="membershipChart" width="400" height="400"></canvas>
+</div>
+
+<div id = "deaths" display: none>
+    <canvas id="deathChart" width="400" height="400"></canvas>
+</div>
+
+<div id = "popularity" display: none>
+    <canvas id="popularityChart" width="400" height="400"></canvas>
+</div>
+
+<div id = "deathProb" display: none>
+    <canvas id="deathProbChart" width="400" height="400"></canvas>	
+</div>
+
 <script>
 function setAllButOneHidden(leaveVisible) {
-    document.getElementById("winChart").style.visibility = "hidden";
-    document.getElementById("membershipChart").style.visibility = "hidden";
-    document.getElementById("deathChart").style.visibility = "hidden";
-    document.getElementById("popularityChart").style.visibility = "hidden";
-    document.getElementById("deathProbChart").style.visibility = "hidden";
+    document.getElementById("wins").style.display = "none";
+    document.getElementById("members").style.display = "none";
+    document.getElementById("deaths").style.display = "none";
+    document.getElementById("popularity").style.display = "none";
+    document.getElementById("deathProb").style.display = "none";
 
     var idToMakeVisible = "";
     switch(leaveVisible) {
         case "House Membership":
-            idToMakeVisible = "membershipChart";
+            idToMakeVisible = "members";
             break;
         case "House Death":
-            idToMakeVisible = "deathChart";
+            idToMakeVisible = "deaths";
             break;
         case "Most Popular Characters":
-            idToMakeVisible = "popularityChart";
+            idToMakeVisible = "popularity";
             break;
         case "Likely to Die Characters":
-            idToMakeVisible = "deathProbChart";
+            idToMakeVisible = "deathProb";
             break;
         default:
-            idToMakeVisible = "winChart";
+            idToMakeVisible = "wins";
             break;
     }
 
-    document.getElementById(idToMakeVisible).style.visibility = "visible";
+    document.getElementById(idToMakeVisible).style.display = "block";
+
 }
 
 function updateDisplay(target) {
@@ -185,19 +210,6 @@ function updateDisplay(target) {
     setAllButOneHidden(target);
 }
 </script>
-<br>
-<br>
-
-<canvas id="winChart" width="400" height="400", visibility: hidden></canvas>
-
-<canvas id="membershipChart" width="400" height="400", visibility: hidden></canvas>
-
-<canvas id="deathChart" width="400" height="400", visibility: hidden></canvas>
-
-<canvas id="popularityChart" width="400" height="400", visibility: hidden></canvas>
-
-<canvas id="deathProbChart" width="400" height="400", visibility: hidden></canvas>	
-
 
 <script>
 function populateWinChart() {
@@ -345,6 +357,11 @@ window.onload = function() {
     populateDeathChart();
     populatePopularityChart();
     populateDeathProbChart();
+    document.getElementById("wins").style.display = "none";
+    document.getElementById("members").style.display = "none";
+    document.getElementById("deaths").style.display = "none";
+    document.getElementById("popularity").style.display = "none";
+    document.getElementById("deathProb").style.display = "none";
 }
 </script>
 </body>

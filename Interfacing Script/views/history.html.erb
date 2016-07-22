@@ -258,7 +258,7 @@ function modifyPageContents(arr) {
         var earnings = 0.00
         if(status == "win") {
             var odds = arr[row][5];
-            var betAmount = arr[row][4];
+            var betAmount = parseFloat(arr[row][4]);
             earnings = betAmount * odds + betAmount;
             moneyArr.push(earnings);
         }
