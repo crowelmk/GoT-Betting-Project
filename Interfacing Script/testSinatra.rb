@@ -14,9 +14,10 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 # html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	erb :'home.html', :locals => {'client' => @@client}
+	# erb :'home.html', :locals => {'client' => @@client}
 	# erb :'updateChoice.html'
 	# erb :'chart.html', :locals => {'client' => @@client}
+	erb :'testUpdatePerson.html', :locals => {'client' => @@client}
 end
 
 get '/throneBet' do
@@ -105,4 +106,20 @@ post '/performDeleteEvent' do
 
 	delete_event(@@client, params[:name], params[:bookNo], params[:eventType])
 	redirect '/updateMenu'
+end
+
+post '/obtainCharacters' do
+	require_relative 'views/testEndtoEnd.rb'
+	numChar = params[:numChar]
+	amtData = params[:amtData]
+
+	if numChar == "some" && amtData == "some"
+		obtain_some_characters_some_data(@@client).to_json
+	elsif numChar == "some" && amtData == "all"
+		obtain_some_characters_all_data(@@client).to_json
+	elsif numChar == "all" && amtData == "some"
+		obtain_some_characters_all_data(@@client).to_json
+	elsif numChar == "all" && amtData == "all"
+		obtain_all_characters_all_data(@@client).to_json
+	end
 end

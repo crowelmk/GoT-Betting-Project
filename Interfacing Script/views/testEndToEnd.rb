@@ -435,22 +435,86 @@ def update_house(client, house_name, bookNo, wonThrone)
 	client.query("CALL update_house('%s', %d, %d, @output_value)" % [house_name, wonThrone, bookNo])
 end
 
-def delete_event(client, name, bookNo, event_type)
-	eventID = 0
-	result = client.query("SELECT MAX(EventID)
-							FROM Event
-							WHERE ParticipantName = '%s'
-								  AND BookOccurred = %d
-								  AND EventType = '%s'" % [name, bookNo, event_type])
+def obtain_some_characters_some_data(client)
+	result = client.query("SELECT Name, IsAlive
+								FROM Person
+								WHERE IsOption = 1
+								ORDER BY IsAlive DESC,
+										 Name")
 
+	toReturn = []
 	result.each do |val|
-		eventID = val[0]
+		toReturn << val
 	end
 
-	if eventID != nil
-		client.query("CALL delete_event(#{eventID}, @output_value)")
-		puts "Deletion was successful!"
-	else
-		puts "No matching event found, deletion failed."
+	return toReturn
+end
+
+def obtain_some_characters_all_data(client)
+	result = client.query("(SELECT Name, IsAlive, H.HouseName, 
+								   Title, Popularity, DeathProbability
+							FROM Person AS P, House AS H
+							WHERE P.HouseID = H.HouseID
+								  AND P.IsOption = 1
+							ORDER BY IsAlive DESC,
+									 Name)
+							UNION
+							(SELECT Name, IsAlive, 'Unaffiliated' AS HName, 
+									Title, Popularity, DeathProbability
+							FROM Person AS P, House AS H
+							WHERE P.HouseID IS NULL
+								  AND P.IsOption = 1
+							ORDER BY IsAlive DESC,
+									 Name)")
+
+	toReturn = []
+	result.each do |val|
+		val[4] = val[4].to_f
+		val[5] = val[5].to_f
+		toReturn << val
 	end
+
+	return toReturn
+end
+
+def obtain_all_characters_some_data(client)
+	result = client.query("SELECT Name, IsAlive
+								FROM Person
+								ORDER BY IsOption DESC,
+										 IsAlive DESC,
+										 Name")
+
+	toReturn = []
+	result.each do |val|
+		toReturn << val
+	end
+
+	return toReturn
+end
+
+def obtain_all_characters_all_data(client)
+	result = client.query("(SELECT Name, IsAlive, H.HouseName, 
+								   Title, Popularity, DeathProbability
+							FROM Person AS P, House AS H
+							WHERE P.HouseID = H.HouseID
+							ORDER BY P.IsOption DESC,
+									 IsAlive DESC,
+									 Name)
+							UNION
+							(SELECT Name, IsAlive, 'Unaffiliated' AS HName, 
+									Title, Popularity, DeathProbability
+							FROM Person AS P, House AS H
+							WHERE P.HouseID IS NULL
+							ORDER BY P.IsOption DESC,
+									 IsAlive DESC,
+									 Name)")
+
+	toReturn = []
+	result.each do |val|
+		val[4] = val[4].to_f
+		val[5] = val[5].to_f
+		toReturn << val
+	end
+
+	return toReturn
 end

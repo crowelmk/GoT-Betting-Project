@@ -162,7 +162,6 @@ homecontent{
 </ul>
 <br>
 
-
 <div id = "userinput">
     Email: <input type = "text" id = "email">
     <div class = "dropdown">
@@ -205,7 +204,13 @@ homecontent{
 <div style="overflow-x:auto;">
 <table>
 </table>
+</div>
+<br>
 
+<canvas id="myChart" width="400" height="400"></canvas>
+
+
+<div>
 <script>
 function modifyPageContents(arr) {
     var tab, tr, td, tn, row, col;
@@ -280,10 +285,6 @@ function modifyPageContents(arr) {
     modifyChart(moneyArr);
 }
 </script>
-</div>
-<br>
-
-<canvas id="myChart" width="400" height="400"></canvas>
 <script>
 function modifyChart(moneyArr) {
     var ctx = document.getElementById("myChart");
@@ -335,8 +336,6 @@ function modifyChart(moneyArr) {
 }
 
 </script>
-
-<div>
 <script>
     function validateInput(email) {
       var emailRegex = new RegExp(".+@.+\..+");
@@ -356,6 +355,10 @@ function modifyChart(moneyArr) {
         else {
             var returned = changeDisplayedHistory(historyOption, email);
         }
+    }
+
+    window.onload = function() {
+        document.getElementById("email").value = "email@email.com";
     }
 </script>
 <br>
