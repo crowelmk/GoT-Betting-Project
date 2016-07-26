@@ -92,7 +92,12 @@ body {
 </form>
 
 <br>
-<button id="change" display: hidden>Submit Changes</button>
+<button id="change" onclick = "submitChanges()" display: hidden>Submit Changes</button>
+<div id = "book">
+  Indicate the current book number (mandatory to submit changes):
+  <input type = "text" id = "bookNo">
+</div>
+<br>
 <table id="char" class="display" cellspacing="0" width="100%">
   <thead>
   </thead>
@@ -101,21 +106,17 @@ body {
 </table>
 
 
-
-
 <script>
-    function isPositiveInt(num) {
-      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
-    }
+var element = document.querySelector("form");
+element.addEventListener("submit", function(event) {
+  event.preventDefault();
+  document.getElementById('change').style.display = "block";;
+  updateTable();
+})
 
-    var element = document.querySelector("form");
-    element.addEventListener("submit", function(event) {
-      event.preventDefault();
-      document.getElementById('change').style.display = "block"
-      updateTable();
-    })
-</script>
-<script>
+function isPositiveInt(num) {
+  return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+}
 
 function populateSmallTable(data) {
   var tab, tr, td, tn, row, col;
@@ -306,7 +307,14 @@ function obtainCharsAndData(numCharVal, amtDataVal) {
      else {
       populateFullTable(myarr);
      }
-     var table = $('#char').DataTable();
+     if($.fn.dataTable.isDataTable('#char')) {
+        table = $('#char').DataTable();
+     }
+     else {
+        var table = $('#char').DataTable({
+          paging: false
+       });
+     }
   })
   // Code to run if the request fails; the raw request and
   // status codes are passed to the function
@@ -315,13 +323,8 @@ function obtainCharsAndData(numCharVal, amtDataVal) {
     console.log( "Error: " + errorThrown );
     console.log( "Status: " + status );
     console.dir( xhr );
-  })
-  // Code to run regardless of success or failure;
-  .always(function( xhr, status ) {
   });
 }
-
-
 
 function updateTable() {
   var someData = $("input:radio[name=data]")[0].checked;
@@ -347,6 +350,67 @@ function updateTable() {
   }
 }
 
+function submitChanges() {
+  var bookNo = document.getElementById('bookNo').value;
+  if(!isPositiveInt(bookNo)) {
+    alert("That is not a valid book number, try again!");
+    return;
+  }
+
+  var table = document.getElementById("char");
+  var allData = [];
+  for (var i = 1, row; row = table.rows[i]; i++) {
+     var rowData = [];
+     var name = row.cells[0].innerHTML;
+     var index = row.cells[1].getElementsByTagName('select')[0].selectedIndex;
+     var isAlive = row.cells[1].getElementsByTagName('option')[index].value;
+
+     var houseName, title, popularity, deathProb;
+     if(row.cells.length == 2) {
+       houseName = "";
+       title = "";
+       popularity = -1;
+       deathProb = -1;
+     } 
+     else {
+      houseName = row.cells[2].getElementsByTagName('input')[0].value;
+      title = row.cells[3].getElementsByTagName('input')[0].value;
+      popularity = row.cells[4].getElementsByTagName('input')[0].value;
+      deathProb = row.cells[5].getElementsByTagName('input')[0].value;
+     }
+
+     rowData.push(name);
+     rowData.push(isAlive);
+     rowData.push(houseName);
+     rowData.push(title);
+     rowData.push(popularity);
+     rowData.push(deathProb);
+
+     allData.push(rowData);
+  }
+
+  $.ajax({
+    url: '/updateCharacters',
+    data: {
+      arr: JSON.stringify(allData),
+      bookNo: bookNo
+    },
+    type: 'POST',
+    dataType: 'text',
+    async: false
+  })  
+  .done(function(response) {
+    window.location.href = response;
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
 </script>
 </div>
 

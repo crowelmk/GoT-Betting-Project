@@ -1,0 +1,298 @@
+<!doctype html>
+<html>
+<head>
+<script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.js"> </script>
+<script src = "http://code.jquery.com/jquery-1.7.2.min.js"> </script>
+<meta charset="utf-8">
+<style>
+/* Style The Dropdown Button */
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    width: 160px;
+    text-align: left;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover 
+{
+    background-color: rgba(0,255,0,0.6);
+    z-index: 1;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+@font-face
+{
+	font-family: GoTFont;
+	src: url(srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+tr:nth-child(odd){background-color: #4CAF50}
+tr:hover{background-color: yellow;}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+
+
+#banner{
+	display: block;	
+}
+
+.betbutton{
+	position: relative;
+	top: 0px;
+	float: right;
+}
+
+
+homecontent{
+	display: block;
+	align-self: center;
+	background-image: url(srcImg/used.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+	width: 900px;
+	height: 200px;
+	text-align: left;
+	position: relative;
+	left: 50px;
+	vertical-align: middle;
+	font-family: GoTFont;
+	font-size: 36px;
+	color: #;
+	color: #ABABAB;
+}
+</style>
+<title>A Winner Is Coming</title>
+</head>
+</html>
+
+
+<html>
+<img src="srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a href = "/">Home</a></li>
+  <li><a href="/history">History</a></li>
+  <li><a href="/statistics">Statistics</a></li>
+  <li><a href="/updateMenu">Update</a></li>
+</ul>
+<br>
+
+<div id = "content">
+  <form name = "add" action="/addBet" method="post" id = "form">
+    Email: <input type="text" name="email">
+    <br>
+    Bet: &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="bet">
+    <br>
+    Book event will occur in:: <input type="text" name="bookNo">
+    <br>
+    <input type = "hidden" name = "betCategory" value = "death">
+    <input type = "hidden" name = "betChoice" value = "">
+    <input type="submit">
+  </form>
+</div>
+
+<div style="overflow-x:auto;">
+    <table>
+      <tr>
+        <th>Character Name</th>
+        <th>Betting Odds</th>
+        <th>Select</th>
+      </tr>
+    </table>
+</div>
+<br>
+
+<script>
+
+var element = document.querySelector("form");
+element.addEventListener("submit", function(event) {
+  if(!reportRadio()) {
+    event.preventDefault();
+    alert("Select a bet option before you place a bet.")
+  }
+
+  var email = document.forms["add"]["email"].value;
+  var bet = document.forms["add"]["bet"].value;
+  var bookNo = document.forms["add"]["bookNo"].value;
+  var emailRegex = new RegExp(".+@.+\..+");
+  var badBetRegex = new RegExp("\s+");
+
+  if(!email.match(emailRegex)) {
+    event.preventDefault();
+    alert('Email must be of form blah@blah.com, try again.');
+  }
+  if (isNaN(bet) || bet.match(badBetRegex) || bet == "") {
+    event.preventDefault();
+    alert('Bet must be a dollar amount, try again.');
+  }
+  if(!isPositiveInt(bookNo)) {
+    event.preventDefault();
+    alert('Invalid book number, try again.')
+  }
+})
+
+window.onload = function() {
+    $.ajax({
+    url: "/obtainDeathBetOptions",
+
+    type: "POST",
+
+    dataType : "json",
+  })
+  // Code to run if the request succeeds (is done);
+  // The response is passed to the function
+  .done(function( data ) {
+     updateTable(data);
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+
+function isPositiveInt(num) {
+    return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+}
+
+function updateTable(arr) {
+    var tab, tr, td, tn, row, col, radio;
+
+    tab = document.getElementsByTagName('table')[0];
+    for (row = 0; row < arr.length; row++)
+    {
+        tr = document.createElement('tr');
+        for (col = 0; col < arr[row].length; col++) 
+        {
+            td = document.createElement('td');
+            tn = document.createTextNode(arr[row][col]);
+            td.appendChild(tn);
+            tr.appendChild(td);
+        }
+        td = document.createElement('td');
+        radio = document.createElement('input');
+        radio.setAttribute("type","radio");
+        radio.setAttribute("name","foo");
+        radio.setAttribute("id",row);
+        td.appendChild(radio);
+        tr.appendChild(td);
+
+        tab.appendChild(tr);
+    }
+}
+
+function reportRadio() {
+    var radios = document.getElementsByName('foo');
+    var count = 0;
+    var name = "";
+    for (count = 0; count < radios.length; count++)
+    {
+        if(radios[count].checked){
+            var index = parseInt(radios[count].getAttribute('id')) + 1;
+            var row = document.getElementsByTagName('tr')[index];
+            name = row.getElementsByTagName('td')[0].innerHTML;
+            break;
+        }
+    }
+    if(name != "") {
+        document.forms["add"]["betChoice"].value = name;
+        return true;
+    }
+    return false;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src = "//code.jquery.com/jquery-1.12.3.js"> </script>
+<script src = "https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"> </script>
+<style>
+@font-face
+{
+	font-family: GoTFont;
+	src: url(../srcImg/GoTFont.ttf);
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}	
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+	  font-family: GoTFont;
+}
+
+li a:hover:not(.active) {
+	background-color: #111;
+	color: #EBDE36;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+body {
+	display: block;
+	width: 1000px;
+	background-color: #333344;
+	margin: 0 auto;
+}
+
+#banner{
+	display: block;	
+}
+
+#form{
+	align-self: center;
+	color: white;
+		
+}
+
+.betbutton{
+	position: relative;
+	top: 75px;
+	float: right;
+}
+</style>
+<title>A Winner Is Coming</title>
+</head>
+</html>
+
+
+<html>
+<img src="../srcImg/test.jpg" width="1000" height="200" alt="" id="banner"/>
+<body>
+<ul>
+  <li><a href = "/">Home</a></li>
+  <li><a href="/history">History</a></li>
+  <li><a href="/statistics">Statistics</a></li>
+  <li><a href="/updateMenu">Update</a></li>
+</ul>
+<br>
+
+<form>
+  <button id = "submit">Fill Table</button>
+</form>
+
+<br>
+<button id="change" onclick = "submitChanges()" display: hidden>Submit Changes</button>
+<div id = "book">
+  Indicate the current book number (mandatory to submit changes):
+  <input type = "text" id = "bookNo">
+</div>
+<br>
+<table id="house" class="display" cellspacing="0" width="100%">
+  <thead>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+
+<script>
+var element = document.querySelector("form");
+element.addEventListener("submit", function(event) {
+  event.preventDefault();
+  document.getElementById('change').style.display = "block";;
+  obtainHousesAndData();
+})
+
+function isPositiveInt(num) {
+  return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+}
+
+function populateTable(data) {
+  var tab, tr, td, tn, row, col;
+
+  // Populate head of table
+  tab = document.getElementsByTagName('thead')[0];
+  tab.innerHTML = "";
+  // Create row for header names
+  tr = document.createElement('tr');
+  // Name header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Name');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // WonThrone header
+  var th = document.createElement('th');
+  tn = document.createTextNode('WonThrone');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  //IsOption header
+  var th = document.createElement('th');
+  tn = document.createTextNode('IsOption');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  tab.appendChild(tr);
+
+
+  // Populate body of table
+  tab = document.getElementsByTagName('tbody')[0];
+  tab.innerHTML = "";
+  for (row = 0; row < data.length; row++)
+    {
+        tr = document.createElement('tr');
+        // Create and fill name column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][0]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+
+        // Create and fill WonThrone column
+        td = document.createElement('td');
+        var sel = document.createElement('select');
+        var option0 = document.createElement('option');
+        option0.text = "0";
+        var option1 = document.createElement('option');
+        option1.text = "1";
+        var wonThrone = data[row][1];
+        if(wonThrone == 0) {
+          option0.selected = "selected";
+        }
+        else {
+          option1.selected = "selected"
+        }
+        sel.add(option0);
+        sel.add(option1);
+        td.appendChild(sel);
+        tr.appendChild(td);
+
+        // Create and fill IsOption column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][2]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+        
+        // Attach row to table
+        tab.appendChild(tr);
+    }
+}
+
+function obtainHousesAndData() {
+  $.ajax({
+    url: "/obtainHouses",
+
+    type: "POST",
+
+    dataType : "json",
+  })
+  // Code to run if the request succeeds (is done);
+  // The response is passed to the function
+  .done(function( data ) {
+     populateTable(data)
+     if($.fn.dataTable.isDataTable('#house')) {
+        table = $('#house').DataTable();
+     }
+     else {
+        var table = $('#house').DataTable({
+          paging: false
+       });
+     }
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+
+function submitChanges() {
+  var bookNo = document.getElementById('bookNo').value;
+  if(!isPositiveInt(bookNo)) {
+    alert("That is not a valid book number, try again!");
+    return;
+  }
+
+  var table = document.getElementById("house");
+  var allData = [];
+  for (var i = 1, row; row = table.rows[i]; i++) {
+     var rowData = [];
+     var name = row.cells[0].innerHTML;
+     var index = row.cells[1].getElementsByTagName('select')[0].selectedIndex;
+     var wonThrone = row.cells[1].getElementsByTagName('option')[index].value;
+
+     rowData.push(name);
+     rowData.push(wonThrone);
+
+     allData.push(rowData);
+  }
+
+  $.ajax({
+    url: '/updateHouses',
+    data: {
+      arr: JSON.stringify(allData),
+      bookNo: bookNo
+    },
+    type: 'POST',
+    dataType: 'text',
+    async: false
+  })  
+  .done(function(response) {
+    window.location.href = response;
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+</script>
+</div>
+
+</body>
+</html>

@@ -49,9 +49,9 @@ def create_tables_and_views(client)
 
 	client.query("CREATE TABLE IF NOT EXISTS Person (
 					CharID INT PRIMARY KEY, 
+					Name varchar(80) NOT NULL UNIQUE,
 					IsAlive SMALLINT NOT NULL,
 					HouseID INT, 
-					Name varchar(80) NOT NULL, 
 					Gender INT NOT NULL, 
 					Title varchar(60), 
 					DeathProbability DECIMAL(10, 3) NOT NULL,
@@ -93,6 +93,7 @@ def create_tables_and_views(client)
 	client.query("CREATE TABLE IF NOT EXISTS Bet (
 					BetID INT AUTO_INCREMENT PRIMARY KEY,
 					OptionID INT NOT NULL,
+					OptionName VARCHAR(80) NOT NULL,
 					BetType VARCHAR(80) NOT NULL,
 					BookNo SMALLINT NOT NULL, 
 					UserEmail VARCHAR(100) NOT NULL,
@@ -512,12 +513,11 @@ def create_log_and_update_person(client)
 
 			SET matchingCharID = (SELECT CharID
 									FROM Person
-									Where Name = charName);
+									Where Name = nameToChange);
 
 			SET oldIsAlive = (SELECT IsAlive
-									FROM Person
-									WHERE CharID = matchingCharID);
-
+								FROM Person
+								WHERE CharID = matchingCharID);
 
 			/* Validate input. */
 
@@ -535,7 +535,8 @@ def create_log_and_update_person(client)
 
 			SET matchingHouseID = (SELECT H.HouseID
 									FROM House AS H
-									Where H.HouseName = houseName);
+									Where H.HouseName = newHouseName);
+
 			IF(matchingHouseID IS NULL) THEN
 				SET matchingHouseID = (SELECT HouseID
 										FROM Person
@@ -696,13 +697,13 @@ def create_log_and_update_house(client)
 
 		    SET matchingEventCount = (SELECT Count(*)
 		    							FROM Event
-		    							WHERE ParticipantName = nameToChange
+		    							WHERE ParticipantName = inputHouseName
 		    								  AND BookOccurred = currentBookNo);
 
 
 		    SET oldEventDescription = (SELECT Description
 		    							FROM Event
-		    							WHERE ParticipantName = nameToChange
+		    							WHERE ParticipantName = inputHouseName
 		    								  AND BookOccurred = currentBookNo);
 
 		    /* WonThrone has not changed and an event already encompasses an update
@@ -716,7 +717,7 @@ def create_log_and_update_house(client)
 		       for logging a new one. */
 		    IF(oldWonThrone != newWonThrone AND matchingEventCount > 0) THEN
 		    	DELETE FROM Event
-		    	WHERE ParticipantName = nameToChange
+		    	WHERE ParticipantName = inputHouseName
 		    		  AND BookOccurred = currentBookNo;
 		    END IF;
 
@@ -737,8 +738,18 @@ def create_log_and_update_house(client)
 		    	SET newEventDescription = 'remained throneless';
 		    END IF;
 
+		    IF (newEventDescription = 'throne') THEN
+				UPDATE House
+				SET IsOption = 0
+				WHERE HouseID = matchingHouseID;
+			ELSE
+				UPDATE House
+				SET IsOption = 1
+				WHERE HouseID = matchingHouseID;
+			END IF;
+
 		    INSERT INTO Event(Description, ParticipantName, ParticipantID, BookOccurred)
-		    VALUES(newEventDescription, nameToChange, matchingCharID, currentBookNo);
+		    VALUES(newEventDescription, inputHouseName, matchingHouseID, currentBookNo);
 
 		    SET output = 0;
 		END")

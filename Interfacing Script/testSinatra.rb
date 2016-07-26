@@ -5,31 +5,39 @@ require 'erb'
 require 'json'
 Tilt.register Tilt::ERBTemplate, 'html.erb'
 
-# template_path = "test.html.erb"
-# template_file = File.read(template_path)
 Mysql2::Client.default_query_options.merge!(:as => :array)
 @@client = Mysql2::Client.new(:host => "192.168.91.2",:username => "testuser", :password => "mysqltest", :database => "testBase");
 
-# Interpret erb file
-# html_doc = ERB.new(template_file).result(binding)
 
 get '/' do
-	# erb :'home.html', :locals => {'client' => @@client}
-	# erb :'updateChoice.html'
-	# erb :'chart.html', :locals => {'client' => @@client}
-	erb :'testUpdatePerson.html', :locals => {'client' => @@client}
-end
-
-get '/throneBet' do
-	erb :'throneBet.html', :locals => {'client' => @@client}
+	erb :'home.html', :locals => {'client' => @@client}
 end
 
 get '/deathBet' do
-	erb :'deathBet.html', :locals => {'client' => @@client}
+	erb :'deathOptionPage.html'
+end
+
+post '/obtainDeathBetOptions' do
+	require_relative 'views/testEndToEnd.rb'
+	obtain_death_bet_options(@@client).to_json
+end
+
+get '/throneBet' do
+	erb :'throneOptionPage.html'
+end
+
+post '/obtainThroneBetOptions' do
+	require_relative 'views/testEndToEnd.rb'
+	obtain_throne_bet_options(@@client).to_json
 end
 
 get '/resurrectBet' do
-	erb :'resBet.html', :locals => {'client' => @@client}
+	erb :'resurrectOptionPage.html'
+end
+
+post '/obtainResurrectBetOptions' do
+	require_relative 'views/testEndToEnd.rb'
+	obtain_resurrect_bet_options(@@client).to_json
 end
 
 get '/placeBet/:betCategory&:betChoice' do
@@ -42,14 +50,15 @@ post '/addBet' do
 	betChoice = params[:betChoice]
 	email = params[:email]
 	bet = params[:bet]
+	bookNo = params[:bookNo]
 
 	case betCategory
 	when "throne"
-		add_throne_bet(betChoice, @@client, email, bet)
+		add_throne_bet(@@client, betCategory, betChoice, email, bet, bookNo)
 	when "death"
-		add_death_bet(betChoice, @@client, email, bet)
+		add_death_bet(@@client, betCategory, betChoice, email, bet, bookNo)
 	when "resurrect"
-		add_resurrect_bet(betChoice, @@client, email, bet)
+		add_resurrect_bet(@@client, betCategory, betChoice, email, bet, bookNo)
 	else
 		puts "Invalid bet!"
 	end
@@ -75,37 +84,11 @@ get '/updateMenu' do
 end
 
 get '/updatePerson' do
-	erb :'updatePerson.html'
-end
-
-post '/performPersonUpdate' do
-	require_relative 'views/testEndToEnd.rb'
-
-	update_person(@@client, params[:charName], params[:bookNo], params[:houseName], 
-		params[:title], params[:isAlive], params[:deathProb], params[:popularity])
-	redirect '/updateMenu'
+	erb :'testUpdatePerson.html', :locals => {'client' => @@client}
 end
 
 get '/updateHouse' do
-	erb :'updateHouse.html'
-end
-
-post '/performHouseUpdate' do
-	require_relative 'views/testEndToEnd.rb'
-
-	update_house(@@client, params[:houseName], params[:bookNo], params[:wonThrone])
-	redirect '/updateMenu'
-end
-
-get '/deleteEvent' do
-	erb :'deleteEvent.html'
-end
-
-post '/performDeleteEvent' do
-	require_relative 'views/testEndToEnd.rb'
-
-	delete_event(@@client, params[:name], params[:bookNo], params[:eventType])
-	redirect '/updateMenu'
+	erb :'testUpdateHouse.html', :locals => {'client' => @@client}
 end
 
 post '/obtainCharacters' do
@@ -122,4 +105,29 @@ post '/obtainCharacters' do
 	elsif numChar == "all" && amtData == "all"
 		obtain_all_characters_all_data(@@client).to_json
 	end
+end
+
+post '/updateCharacters' do
+	require_relative 'views/testEndtoEnd.rb'
+	data = JSON.parse(params[:arr])
+	bookNo = params[:bookNo]
+	data.each do |row|
+		update_person(@@client, bookNo, row[0], row[1], row[2], row[3], row[4], row[5])
+	end
+	'/updateMenu'
+end
+
+post '/obtainHouses' do
+	require_relative 'views/testEndtoEnd.rb'
+	obtain_houses_and_data(@@client).to_json
+end
+
+post '/updateHouses' do
+	require_relative 'views/testEndtoEnd.rb'
+	data = JSON.parse(params[:arr])
+	bookNo = params[:bookNo]
+	data.each do |row|
+		update_house(@@client, bookNo, row[0], row[1])
+	end
+	'/updateMenu'
 end
