@@ -367,6 +367,7 @@ def populate_tables(client, people, stats, battles)
 			while(person[bookIndex].to_i == 0) 
 				bookIndex = bookIndex + 1
 			end
+
 			introBookNo = bookIndex - 7
 
 			houseName = person[1]
@@ -382,6 +383,7 @@ def populate_tables(client, people, stats, battles)
 			if bookOfDeath == nil
 				bookOfDeath = -1
 			end
+
 			personIsAlive = person[3] != nil ? 0 : 1
 			probability = stats[statRow][4]
 			popularity = stats[statRow][31]
@@ -543,7 +545,7 @@ def create_log_and_update_person(client)
 										WHERE CharID = matchingCharID);
 			END IF;
 
-			IF(newTitle IS NULL) THEN
+			IF(newTitle = '') THEN
 				SET newTitle = (SELECT Title
 									FROM Person
 									WHERE CharID = matchingCharID);

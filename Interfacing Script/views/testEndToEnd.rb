@@ -198,7 +198,7 @@ end
 
 def obtain_some_characters_all_data(client)
 	result = client.query("(SELECT Name, IsAlive, H.HouseName, 
-								   Title, Popularity, DeathProbability
+								   P.Title, Popularity, DeathProbability
 							FROM Person AS P, House AS H
 							WHERE P.HouseID = H.HouseID
 								  AND P.IsOption = 1
@@ -206,7 +206,7 @@ def obtain_some_characters_all_data(client)
 									 Name)
 							UNION
 							(SELECT Name, IsAlive, 'Unaffiliated' AS HName, 
-									Title, Popularity, DeathProbability
+									P.Title, Popularity, DeathProbability
 							FROM Person AS P, House AS H
 							WHERE P.HouseID IS NULL
 								  AND P.IsOption = 1
@@ -215,6 +215,7 @@ def obtain_some_characters_all_data(client)
 
 	toReturn = []
 	result.each do |val|
+		puts "#{val[3]}"
 		val[4] = val[4].to_f
 		val[5] = val[5].to_f
 		toReturn << val
@@ -236,15 +237,6 @@ def obtain_all_characters_some_data(client)
 	end
 
 	return toReturn
-end
-
-def update_person(client, bookNo, char_name, isAlive, 
-	house_name, title, popularity, deathProb)
-
-	char_name = remove_bad_char(char_name)
-	house_name = remove_bad_char(house_name)
-	title = remove_bad_char(title)
-	client.query("CALL log_and_update_person('%s', '%s', '%s', %d, %.3f, %.6f, %d, @output_value)" % [char_name, house_name, title, isAlive, deathProb, popularity, bookNo])
 end
 
 def obtain_all_characters_all_data(client)
@@ -272,6 +264,15 @@ def obtain_all_characters_all_data(client)
 	end
 
 	return toReturn
+end
+
+def update_person(client, bookNo, char_name, isAlive, 
+	house_name, title, popularity, deathProb)
+
+	char_name = remove_bad_char(char_name)
+	house_name = remove_bad_char(house_name)
+	title = remove_bad_char(title)
+	client.query("CALL log_and_update_person('%s', '%s', '%s', %d, %.3f, %.6f, %d, @output_value)" % [char_name, house_name, title, isAlive, deathProb, popularity, bookNo])
 end
 
 def obtain_houses_and_data(client)
