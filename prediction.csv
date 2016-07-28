@@ -683,7 +683,6 @@ S.No,actual,pred,alive,plod,name,title,male,culture,dateOfBirth,DateoFdeath,moth
 682,1,0,0.318,0.682,Kyleg,,0,Free Folk,,,,,,,,0,0,0,0,1,,,,,0,0,,0,0,0,0.010033,1
 683,1,1,0.809,0.191,Kym,Maester,0,,,,,,,,,0,1,0,0,0,,,,,0,1,,0,0,0,0,1
 684,1,1,0.847,0.153,Lamprey,,1,,,,,,,House Baratheon of Dragonstone,,0,0,1,0,0,,,,,0,0,,0,0,0,0.010033,1
-685,1,1,0.809,0.191,Lancel V Lannister,,0,,,,,,,,,0,0,0,0,0,,,,,0,0,,0,0,0,0.020067,1
 686,1,1,0.816,0.184,Lanna,,0,,285,,,,,,,0,0,1,1,0,,,,,0,0,20,0,0,0,0.020067,1
 687,1,1,0.971,0.029,Lanna (Happy Port),,0,Braavosi,286,,,,,Happy Port,,0,0,0,1,0,,,,,0,0,19,0,0,0,0.026756,1
 688,1,1,0.964,0.036,Larraq,,1,Ghiscari,,,,,,,,0,0,0,0,1,,,,,0,0,,0,0,0,0.020067,1
@@ -1535,7 +1534,6 @@ S.No,actual,pred,alive,plod,name,title,male,culture,dateOfBirth,DateoFdeath,moth
 1534,0,1,0.959,0.041,Kurleket,,1,,,298,,,,House Bracken,,1,0,0,0,0,,,,,0,0,,0,0,0,0.010033,0
 1535,1,0,0.139,0.861,Lann the Clever,,1,,,,,,,House Lannister,,1,0,0,0,0,,,,,0,0,,0,0,0,0.060201,1
 1536,1,0,0.172,0.828,Kyle Condon,Ser,1,,,,,,,House Condon,,0,0,1,0,0,,,,,0,1,,0,0,0,0.040134,1
-1537,1,0,0.018,0.982,Lancel Lannister,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
 1538,1,1,0.987,0.013,Likely Luke,,0,,,,,,,Brotherhood Without Banners,,0,0,1,1,0,,,,,0,0,,0,0,0,0.013378,1
 1539,0,0,0.145,0.855,Lucas Inchfield,Ser,1,,,211,,,,House Inchfield,,0,0,0,0,0,,,,,0,1,,0,0,0,0.053512,0
 1540,1,0,0.042,0.958,Lollys Stokeworth,Stokeworth,0,,265,,,,,House Stokeworth,Bronn,0,1,1,1,1,,,,1,1,1,40,2,1,0,0.12709,1
