@@ -1104,7 +1104,6 @@ if mode == "create"
 else
 	files.each do |file|
 		begin
-			puts "#{file}"
 			currentFile = CSV.read(file)
 			if currentFile[0][1] == "Allegiances"
 				people = currentFile
