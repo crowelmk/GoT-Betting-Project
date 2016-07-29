@@ -6,7 +6,7 @@ require 'json'
 Tilt.register Tilt::ERBTemplate, 'html.erb'
 
 Mysql2::Client.default_query_options.merge!(:as => :array)
-@@client = Mysql2::Client.new(:host => "192.168.91.2",:username => "testuser", :password => "mysqltest", :database => "testBase");
+@@client = Mysql2::Client.new(:host => "192.168.91.2",:username => "testuser", :password => "mysqltest", :database => "bettingBase");
 
 
 get '/' do

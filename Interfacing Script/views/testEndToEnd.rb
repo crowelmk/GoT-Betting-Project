@@ -20,7 +20,7 @@ def obtain_bet_history(client, bet_type, email)
 									 ON B.OptionName = E.ParticipantName
 										AND B.BookNo = E.BookOccurred,
 									 Person AS P
-								WHERE B.OptionID = P.CharID
+								WHERE B.OptionName = P.Name
 									  AND B.BetType = 'death'
 									  AND B.UserEmail = '%s'" % email)
 	when "Throne"
@@ -30,7 +30,7 @@ def obtain_bet_history(client, bet_type, email)
 									 ON B.OptionName = E.ParticipantName
 										AND B.BookNo = E.BookOccurred,
 									 House AS H
-								WHERE B.OptionID = H.HouseID
+								WHERE B.OptionName = H.HouseName
 									  AND B.BetType = 'throne'
 									  AND B.UserEmail = '%s'" % email)
 	when "Resurrect"
@@ -40,7 +40,7 @@ def obtain_bet_history(client, bet_type, email)
 									 ON B.OptionName = E.ParticipantName
 										AND B.BookNo = E.BookOccurred,
 									 Person AS P
-								WHERE B.OptionID = P.CharID
+								WHERE B.OptionName = P.Name
 									  AND B.BetType = 'resurrect'
 									  AND B.UserEmail = '%s'" % email)
 	when "All"
@@ -50,7 +50,7 @@ def obtain_bet_history(client, bet_type, email)
 										 ON B.OptionName = E.ParticipantName
 											AND B.BookNo = E.BookOccurred,
 										 Person AS P
-									WHERE B.OptionID = P.CharID
+									WHERE B.OptionName = P.Name
 										  AND B.UserEmail = '%s')
 								UNION
 								(SELECT B.UserEmail, B.BetType, B.OptionName, 
@@ -59,7 +59,7 @@ def obtain_bet_history(client, bet_type, email)
 											 ON B.OptionName = E.ParticipantName
 											 AND B.BookNo = E.BookOccurred,
 											 House AS H
-										WHERE B.OptionID = H.HouseID
+										WHERE B.OptionName = H.HouseName
 											  AND B.UserEmail = '%s')" % [email, email])
 	end
 
@@ -121,64 +121,22 @@ def obtain_resurrect_bet_options(client)
 	return toReturn
 end
 
-def add_death_bet(client, bet_type, bet_option, email, bet_amount, bookNo) 
-	optionID = 0
-	result = client.query("SELECT CharID
-							FROM Person
-							WHERE Name = '%s'" % bet_option)
+def add_death_bet(client, bet_type, bet_option, email, bet_amount, bookNo)
 
-	result.each do |val|
-		optionID = val[0]
-		break
-	end
-
-	if optionID == 0
-		puts "No matching character to bet on was found."
-		return
-	end
-
-	client.query("INSERT INTO Bet(OptionID, OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES(%d, '%s','%s', %d, '%s', %.2f)" % [optionID, bet_option, bet_type, bookNo, email, bet_amount])
+	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
 end
 
 def add_throne_bet(client, bet_type, bet_option, email, bet_amount, bookNo) 
-	optionID = 0
-	result = client.query("SELECT HouseID
-							FROM House
-							WHERE HouseName = '%s'" % bet_option)
 
-	result.each do |val|
-		optionID = val[0]
-		break
-	end
-
-	if optionID == 0
-		puts "No matching house to bet on was found."
-		return
-	end
-
-	client.query("INSERT INTO Bet(OptionID, OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES(%d, '%s','%s', %d, '%s', %.2f)" % [optionID, bet_option, bet_type, bookNo, email, bet_amount])
+	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
 end
 
 def add_resurrect_bet(client, bet_type, bet_option, email, bet_amount, bookNo) 
-	optionID = 0
-	result = client.query("SELECT CharID
-							FROM Person
-							WHERE Name = '%s'" % bet_option)
 
-	result.each do |val|
-		optionID = val[0]
-		break
-	end
-
-	if optionID == 0
-		puts "No matching character to bet on was found."
-		return
-	end
-
-	client.query("INSERT INTO Bet(OptionID, OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES(%d, '%s','%s', %d, '%s', %.2f)" % [optionID, bet_option, bet_type, bookNo, email, bet_amount])
+	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
 end
 
 def obtain_some_characters_some_data(client)
@@ -215,7 +173,6 @@ def obtain_some_characters_all_data(client)
 
 	toReturn = []
 	result.each do |val|
-		puts "#{val[3]}"
 		val[4] = val[4].to_f
 		val[5] = val[5].to_f
 		toReturn << val

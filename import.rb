@@ -97,7 +97,6 @@ def create_tables_and_views(client)
 
 	client.query("CREATE TABLE IF NOT EXISTS Bet (
 					BetID INT AUTO_INCREMENT PRIMARY KEY,
-					OptionID INT NOT NULL,
 					OptionName VARCHAR(80) NOT NULL,
 					BetType VARCHAR(80) NOT NULL,
 					BookNo SMALLINT NOT NULL, 
@@ -431,17 +430,15 @@ def create_bet_insert_trigger(client)
 
 				  	SET matchingCharCount = (SELECT COUNT(*)
 				  								FROM Person
-				  								WHERE CharID = NEW.OptionID
-				  								      AND Name = NEW.OptionName);
+				  								WHERE Name = NEW.OptionName);
 
 				  	SET matchingHouseCount = (SELECT COUNT(*)
 				  								FROM House
-				  								WHERE HouseID = NEW.OptionID
-				  								AND HouseName = NEW.OptionName);
+				  								WHERE HouseName = NEW.OptionName);
 
 				  	IF((matchingCharCount != 1 && matchingHouseCount != 1) 
 				  		OR (matchingCharCount > 0 AND matchingHouseCount > 0)) THEN
-				  		SET NEW.OptionID = NULL;
+				  		SET NEW.OptionName = NULL;
 				  	END IF;
 				  END")
 end
@@ -457,17 +454,15 @@ def create_bet_update_trigger(client)
 
 				  	SET matchingCharCount = (SELECT COUNT(*)
 				  								FROM Person
-				  								WHERE CharID = NEW.OptionID
-				  								      AND Name = NEW.OptionName);
+				  								WHERE Name = NEW.OptionName);
 
 				  	SET matchingHouseCount = (SELECT COUNT(*)
 				  								FROM House
-				  								WHERE HouseID = NEW.OptionID
-				  								AND HouseName = NEW.OptionName);
+				  								WHERE HouseName = NEW.OptionName);
 
 				  	IF((matchingCharCount != 1 && matchingHouseCount != 1) 
 				  		OR (matchingCharCount > 0 AND matchingHouseCount > 0)) THEN
-				  		SET NEW.OptionID = NULL;
+				  		SET NEW.OptionName = NULL;
 				  	END IF;
 				  END")
 end
@@ -622,7 +617,6 @@ end
 
 def create_indexes(client)
 	client.query("CREATE INDEX bet_foreign_name ON Bet(OptionName)")
-	client.query("CREATE INDEX bet_foreign_id ON Bet(OptionID)")
 	client.query("CREATE INDEX event_foreign_name ON Event(ParticipantName)")
 end
 
