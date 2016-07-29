@@ -2,6 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src = "//code.jquery.com/jquery-1.12.3.js"> </script>
+<script src = "https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"> </script>
 <style>
 @font-face
 {
@@ -75,43 +78,185 @@ body {
   <li><a href="/statistics">Statistics</a></li>
   <li><a href="/updateMenu">Update</a></li>
 </ul>
+<br>
+
+<form>
+  <button id = "submit">Fill Table</button>
+</form>
 
 <br>
-<div id = "content">
-  <form name = "add" action="/performHouseUpdate" method="post" id = "form">
-    House Name (*mandatory): <br>
-    <input type="text" name="houseName">
-    <br>
-    Current Book Number (*mandatory): <br>
-    <input type="text" name="bookNo">
-    <br>
-    Won Throne (0 for no, 1 for yes): <br>
-    <input type="text" name="wonThrone">
-    <br>
+<button id="change" onclick = "submitChanges()" display: hidden>Submit Changes</button>
+<div id = "book">
+  Indicate the current book number (mandatory to submit changes):
+  <input type = "text" id = "bookNo">
+</div>
+<br>
+<table id="house" class="display" cellspacing="0" width="100%">
+  <thead>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
 
-    <input type="submit" name = "submit">
-  </form>
 
 <script>
-    function isPositiveInt(num) {
-      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+var element = document.querySelector("form");
+element.addEventListener("submit", function(event) {
+  event.preventDefault();
+  document.getElementById('change').style.display = "block";;
+  obtainHousesAndData();
+})
+
+function isPositiveInt(num) {
+  return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+}
+
+function populateTable(data) {
+  var tab, tr, td, tn, row, col;
+
+  // Populate head of table
+  tab = document.getElementsByTagName('thead')[0];
+  tab.innerHTML = "";
+  // Create row for header names
+  tr = document.createElement('tr');
+  // Name header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Name');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // WonThrone header
+  var th = document.createElement('th');
+  tn = document.createTextNode('WonThrone');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  //IsOption header
+  var th = document.createElement('th');
+  tn = document.createTextNode('IsOption');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  tab.appendChild(tr);
+
+
+  // Populate body of table
+  tab = document.getElementsByTagName('tbody')[0];
+  tab.innerHTML = "";
+  for (row = 0; row < data.length; row++)
+    {
+        tr = document.createElement('tr');
+        // Create and fill name column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][0]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+
+        // Create and fill WonThrone column
+        td = document.createElement('td');
+        var sel = document.createElement('select');
+        var option0 = document.createElement('option');
+        option0.text = "0";
+        var option1 = document.createElement('option');
+        option1.text = "1";
+        var wonThrone = data[row][1];
+        if(wonThrone == 0) {
+          option0.selected = "selected";
+        }
+        else {
+          option1.selected = "selected"
+        }
+        sel.add(option0);
+        sel.add(option1);
+        td.appendChild(sel);
+        tr.appendChild(td);
+
+        // Create and fill IsOption column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][2]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+        
+        // Attach row to table
+        tab.appendChild(tr);
     }
+}
 
-    var element = document.querySelector("form");
-    element.addEventListener("submit", function(event) {
-      var houseName = document.forms["add"]["houseName"].value;
-      var bookNo = document.forms["add"]["bookNo"].value;
+function obtainHousesAndData() {
+  $.ajax({
+    url: "/obtainHouses",
 
-      if(houseName == "" || !isNaN(houseName)) {
-        event.preventDefault();
-        alert('Please enter a valid house name.');
-      }
-      if (!isPositiveInt(bookNo)) {
-        event.preventDefault();
-        alert('Book number must be a valid positive integer, try again.');
-      }
-    })
-  </script>
+    type: "POST",
+
+    dataType : "json",
+  })
+  // Code to run if the request succeeds (is done);
+  // The response is passed to the function
+  .done(function( data ) {
+     populateTable(data)
+     if($.fn.dataTable.isDataTable('#house')) {
+        table = $('#house').DataTable();
+     }
+     else {
+        var table = $('#house').DataTable({
+          paging: false
+       });
+     }
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+
+function submitChanges() {
+  var bookNo = document.getElementById('bookNo').value;
+  if(!isPositiveInt(bookNo)) {
+    alert("That is not a valid book number, try again!");
+    return;
+  }
+
+  var table = document.getElementById("house");
+  var allData = [];
+  for (var i = 1, row; row = table.rows[i]; i++) {
+     var rowData = [];
+     var name = row.cells[0].innerHTML;
+     var index = row.cells[1].getElementsByTagName('select')[0].selectedIndex;
+     var wonThrone = row.cells[1].getElementsByTagName('option')[index].value;
+
+     rowData.push(name);
+     rowData.push(wonThrone);
+
+     allData.push(rowData);
+  }
+
+  $.ajax({
+    url: '/updateHouses',
+    data: {
+      arr: JSON.stringify(allData),
+      bookNo: bookNo
+    },
+    type: 'POST',
+    dataType: 'text',
+    async: false
+  })  
+  .done(function(response) {
+    window.location.href = response;
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+</script>
 </div>
 
 </body>

@@ -2,6 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<script src = "//code.jquery.com/jquery-1.12.3.js"> </script>
+<script src = "https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"> </script>
 <style>
 @font-face
 {
@@ -75,55 +78,340 @@ body {
   <li><a href="/statistics">Statistics</a></li>
   <li><a href="/updateMenu">Update</a></li>
 </ul>
+<br>
+
+<form style = "color: white">
+  <button id = "submit">Fill Table</button>
+  <br>
+  Select Number of Columns to Grab:
+  <input type="radio" name = "data" id="data" value="some" checked> Bet-Relevant Columns
+  <input type="radio" name = "data" id="data" value="all"> All Columns<br>
+  Select Number of Characters to Grab:
+  <input type="radio" name = "numChar" id="numChar" value="some" checked> Bet-Relevant Characters
+  <input type="radio" name = "numChar" id="numChar" value="all"> All Characters<br>
+</form>
 
 <br>
-<div id = "content">
-  <form name = "add" action="/performPersonUpdate" method="post" id = "form">
-    Character Name (*mandatory): <br>
-    <input type="text" name="charName">
-    <br>
-    Current Book Number (*mandatory): <br>
-    <input type="text" name="bookNo">
-    <br>
-    House Name: <br>
-    <input type="text" name="houseName">
-    <br>
-    Title: <br>
-    <input type="text" name="title">
-    <br>
-    Is Alive (0 for dead, 1 for alive): <br>
-    <input type="text" name="isAlive">
-    <br>
-    Likelihood of Death (decimal of form 0.ddd): <br>
-    <input type="text" name="deathProb">
-    <br>
-    Popularity (decimal of form 0.dddddd or 1): <br>
-    <input type="text" name="popularity">
-    <br>
+<button id="change" onclick = "submitChanges()" display: hidden>Submit Changes</button>
+<div id = "book" style = "color: white">
+  Indicate the current book number (mandatory to submit changes):
+  <input type = "text" id = "bookNo">
+</div>
+<br>
+<table id="char" class="display" cellspacing="0" width="100%">
+  <thead style = "color: white">
+  </thead>
+  <tbody>
+  </tbody>
+</table>
 
-    <input type="submit" name = "submit">
-  </form>
 
 <script>
-    function isPositiveInt(num) {
-      return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+var element = document.querySelector("form");
+element.addEventListener("submit", function(event) {
+  event.preventDefault();
+  document.getElementById('change').style.display = "block";;
+  updateTable();
+})
+
+function isPositiveInt(num) {
+  return num != "" && num > 0 && !isNaN(num) && num % 1 == 0
+}
+
+function populateSmallTable(data) {
+  var tab, tr, td, tn, row, col;
+
+  // Populate head of table
+  tab = document.getElementsByTagName('thead')[0];
+  tab.innerHTML = "";
+  // Create row for header names
+  tr = document.createElement('tr');
+  // Name header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Name');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // IsAlive header
+  var th = document.createElement('th');
+  tn = document.createTextNode('IsAlive');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  tab.appendChild(tr);
+
+
+  // Populate body of table
+  tab = document.getElementsByTagName('tbody')[0];
+  tab.innerHTML = "";
+  for (row = 0; row < data.length; row++)
+    {
+        tr = document.createElement('tr');
+        // Create and fill name column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][0]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+        // Create and fill IsAlive column
+        td = document.createElement('td');
+        var sel = document.createElement('select');
+        var option0 = document.createElement('option');
+        option0.text = "0";
+        var option1 = document.createElement('option');
+        option1.text = "1";
+        var isAlive = data[row][1];
+        if(isAlive == 0) {
+          option0.selected = "selected";
+        }
+        else {
+          option1.selected = "selected"
+        }
+        sel.add(option0);
+        sel.add(option1);
+        td.appendChild(sel);
+        tr.appendChild(td);
+
+        // Attach row to table
+        tab.appendChild(tr);
     }
+}
 
-    var element = document.querySelector("form");
-    element.addEventListener("submit", function(event) {
-      var charName = document.forms["add"]["charName"].value;
-      var bookNo = document.forms["add"]["bookNo"].value;
+function populateFullTable(data) {
+  var tab, tr, td, tn, row, col;
 
-      if(charName == "" || !isNaN(charName)) {
-        event.preventDefault();
-        alert('Please enter a valid character name.');
-      }
-      if (!isPositiveInt(bookNo)) {
-        event.preventDefault();
-        alert('Book number must be a valid positive integer, try again.');
-      }
-    })
-  </script>
+  // Populate head of table
+  tab = document.getElementsByTagName('thead')[0];
+  tab.innerHTML = "";
+  // Create row for header names
+  tr = document.createElement('tr');
+  // Name header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Name');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // IsAlive header
+  var th = document.createElement('th');
+  tn = document.createTextNode('IsAlive');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // House Name header
+  var th = document.createElement('th');
+  tn = document.createTextNode('House Name');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  // Title header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Title');
+  th.appendChild(tn);
+  tr.appendChild(th);
+  // Popularity header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Popularity');
+  th.appendChild(tn);
+  tr.appendChild(th);
+  // Death Probability header
+  var th = document.createElement('th');
+  tn = document.createTextNode('Death Probability');
+  th.appendChild(tn);
+  tr.appendChild(th);
+
+  tab.appendChild(tr);
+
+  // Populate body of table
+  tab = document.getElementsByTagName('tbody')[0];
+  tab.innerHTML = "";
+  for (row = 0; row < data.length; row++)
+    {
+        tr = document.createElement('tr');
+        // Create and fill name column
+        td = document.createElement('td');
+        tn = document.createTextNode(data[row][0]);
+        td.appendChild(tn);
+        tr.appendChild(td);
+        // Create and fill IsAlive column
+        td = document.createElement('td');
+        var sel = document.createElement('select');
+        var option0 = document.createElement('option');
+        option0.text = "0";
+        var option1 = document.createElement('option');
+        option1.text = "1";
+        var isAlive = data[row][1];
+        if(isAlive == 0) {
+          option0.selected = "selected";
+        }
+        else {
+          option1.selected = "selected"
+        }
+        sel.add(option0);
+        sel.add(option1);
+        td.appendChild(sel);
+        tr.appendChild(td);
+        // Create and fill house name column
+        td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = "text";
+        inp.value = data[row][2];
+        td.appendChild(inp);
+        tr.appendChild(td);
+        // Create and fill title column
+        td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = "text";
+        inp.value = data[row][3];
+        td.appendChild(inp);
+        tr.appendChild(td);
+        // Create and fill popularity column
+        td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = "text";
+        inp.value = data[row][4];
+        td.appendChild(inp);
+        tr.appendChild(td);
+        // Create and fill death probability column
+        td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = "text";
+        inp.value = data[row][5];
+        td.appendChild(inp);
+        tr.appendChild(td);
+
+
+        // Attach row to table
+        tab.appendChild(tr);
+    }
+}
+
+function obtainCharsAndData(numCharVal, amtDataVal) {
+  $.ajax({
+    url: "/obtainCharacters",
+
+    data: {
+      numChar: numCharVal,
+      amtData: amtDataVal
+    },
+
+    type: "POST",
+
+    dataType : "json",
+  })
+  // Code to run if the request succeeds (is done);
+  // The response is passed to the function
+  .done(function( data ) {
+     var myarr = data;
+     if(amtDataVal == "some") {
+      populateSmallTable(myarr);
+     }
+     else {
+      populateFullTable(myarr);
+     }
+     if($.fn.dataTable.isDataTable('#char')) {
+        table = $('#char').DataTable();
+     }
+     else {
+        var table = $('#char').DataTable({
+          paging: false
+       });
+     }
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+
+function updateTable() {
+  var someData = $("input:radio[name=data]")[0].checked;
+  var allData = $("input:radio[name=data]")[1].checked;
+  var someChar = $("input:radio[name=numChar]")[0].checked;
+  var allChar = $("input:radio[name=numChar]")[1].checked;
+
+
+  if(someChar && someData) {
+    obtainCharsAndData("some", "some");
+  }
+  else if(someChar && allData) {
+    obtainCharsAndData("some", "all");
+  }
+  else if(allChar && someData) {
+    obtainCharsAndData("all", "some");
+  }
+  else if(allChar && allData) {
+    obtainCharsAndData("all", "all");
+  }
+  else {
+    alert("Error!");
+  }
+}
+
+function submitChanges() {
+  var bookNo = document.getElementById('bookNo').value;
+  if(!isPositiveInt(bookNo)) {
+    alert("That is not a valid book number, try again!");
+    return;
+  }
+
+  var table = document.getElementById("char");
+  var allData = [];
+  for (var i = 1, row; row = table.rows[i]; i++) {
+     var rowData = [];
+     var name = row.cells[0].innerHTML;
+     var index = row.cells[1].getElementsByTagName('select')[0].selectedIndex;
+     var isAlive = row.cells[1].getElementsByTagName('option')[index].value;
+
+     var houseName, title, popularity, deathProb;
+     if(row.cells.length == 2) {
+       houseName = "";
+       title = "";
+       popularity = -1;
+       deathProb = -1;
+     } 
+     else {
+      houseName = row.cells[2].getElementsByTagName('input')[0].value;
+      title = row.cells[3].getElementsByTagName('input')[0].value;
+      popularity = row.cells[4].getElementsByTagName('input')[0].value;
+      deathProb = row.cells[5].getElementsByTagName('input')[0].value;
+     }
+
+     rowData.push(name);
+     rowData.push(isAlive);
+     rowData.push(houseName);
+     rowData.push(title);
+     rowData.push(popularity);
+     rowData.push(deathProb);
+
+     allData.push(rowData);
+  }
+
+  $.ajax({
+    url: '/updateCharacters',
+    data: {
+      arr: JSON.stringify(allData),
+      bookNo: bookNo
+    },
+    type: 'POST',
+    dataType: 'text',
+    async: false
+  })  
+  .done(function(response) {
+    window.location.href = response;
+  })
+  // Code to run if the request fails; the raw request and
+  // status codes are passed to the function
+  .fail(function( xhr, status, errorThrown ) {
+    alert( "Sorry, there was a problem!" );
+    console.log( "Error: " + errorThrown );
+    console.log( "Status: " + status );
+    console.dir( xhr );
+  });
+}
+</script>
 </div>
 
 </body>

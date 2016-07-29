@@ -84,11 +84,11 @@ get '/updateMenu' do
 end
 
 get '/updatePerson' do
-	erb :'testUpdatePerson.html', :locals => {'client' => @@client}
+	erb :'updatePerson.html', :locals => {'client' => @@client}
 end
 
 get '/updateHouse' do
-	erb :'testUpdateHouse.html', :locals => {'client' => @@client}
+	erb :'updateHouse.html', :locals => {'client' => @@client}
 end
 
 post '/obtainCharacters' do

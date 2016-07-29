@@ -52,8 +52,8 @@ def create_tables_and_views(client)
 					WonThrone SMALLINT NOT NULL,
 					IsOption SMALLINT NOT NULL DEFAULT 0,
 					Odds DECIMAL(10, 3),
-					CHECK(WonThrone = 0 OR WonThrone = 1),
-					CHECK(IsOption = 0 OR IsOption = 1))")
+					CONSTRAINT house_valid_won_throne CHECK(WonThrone = 0 OR WonThrone = 1),
+					CONSTRAINT house_valid_option CHECK(IsOption = 0 OR IsOption = 1))")
 
 	client.query("CREATE TABLE IF NOT EXISTS Person (
 					CharID INT AUTO_INCREMENT PRIMARY KEY, 
@@ -66,20 +66,20 @@ def create_tables_and_views(client)
 					Popularity DECIMAL(10, 6) NOT NULL,
 					BookOfDeath SMALLINT NOT NULL,
 					IsOption INT NOT NULL DEFAULT 0,
-					Odds DECIMAL(10, 3),
+					Odds DECIMAL(10, 3) NOT NULL DEFAULT 0,
 					FOREIGN KEY(HouseID) REFERENCES House(HouseID),
-					CHECK(IsAlive = 0 OR IsAlive = 1),
-					CHECK(Gender = 0 OR Gender = 1),
-					CHECK(DeathProbability <= 1),
-					CHECK(WonThrone = 0 OR WonThrone = 1),
-					CHECK(IsOption = 0 OR IsOption = 1))")
+					CONSTRAINT person_valid_is_alive CHECK(IsAlive = 0 OR IsAlive = 1),
+					CONSTRAINT person_valid_gender CHECK(Gender = 0 OR Gender = 1),
+					CONSTRAINT perosn_valid_death_prob CHECK(DeathProbability <= 1),
+					CONSTRAINT person_valid_popularity CHECK(Popularity <= 1),
+					CONSTRAINT person_valid_option CHECK(IsOption = 0 OR IsOption = 1))")
 
 	client.query("CREATE TABLE IF NOT EXISTS Battle (
 					BattleID INT AUTO_INCREMENT PRIMARY KEY, 
 					BattleName VARCHAR(80) NOT NULL, 
 					City VARCHAR(60), 
 					Year INT,
-					CHECK(Year > 296))")
+					CONSTRAINT battle_valid_year CHECK(Year > 296))")
 
 	client.query("CREATE TABLE IF NOT EXISTS CombatLog (
 					HouseID INT NOT NULL, 
@@ -92,11 +92,8 @@ def create_tables_and_views(client)
 	client.query("CREATE TABLE IF NOT EXISTS Event (
 					EventID INT AUTO_INCREMENT PRIMARY KEY, 
 					Description VARCHAR(80) NOT NULL,
-					ParticipantID INT NOT NULL,
 					ParticipantName VARCHAR(80) NOT NULL,
-					BookOccurred SMALLINT NOT NULL,
-					CHECK(ChangedBets = 0 OR ChangedBets = 1),
-					CHECK(BookOccurred > 0 AND BookOccurred < 11))")
+					BookOccurred SMALLINT NOT NULL)")
 
 	client.query("CREATE TABLE IF NOT EXISTS Bet (
 					BetID INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,7 +103,7 @@ def create_tables_and_views(client)
 					BookNo SMALLINT NOT NULL, 
 					UserEmail VARCHAR(100) NOT NULL,
 					BetAmount DECIMAL(10, 2) NOT NULL,
-					CHECK(BetAmount > 1.00))")
+					CONSTRAINT bet_min_amt CHECK(BetAmount > 1.00))")
 
 	# Views
 	client.query("CREATE OR REPLACE VIEW HouseMembership (
@@ -295,8 +292,8 @@ def create_log_and_update_person(client)
 		    	SET newEventDescription = 'remained dead';
 		    END IF;
 
-		    INSERT INTO Event(Description, ParticipantName, ParticipantID, BookOccurred)
-		    VALUES(newEventDescription, nameToChange, matchingCharID, currentBookNo);
+		    INSERT INTO Event(Description, ParticipantName, BookOccurred)
+		    VALUES(newEventDescription, nameToChange, currentBookNo);
 
 		    SET output = 0;
 
@@ -409,8 +406,8 @@ def create_log_and_update_house(client)
 				WHERE HouseID = matchingHouseID;
 			END IF;
 
-		    INSERT INTO Event(Description, ParticipantName, ParticipantID, BookOccurred)
-		    VALUES(newEventDescription, inputHouseName, matchingHouseID, currentBookNo);
+		    INSERT INTO Event(Description, ParticipantName, BookOccurred)
+		    VALUES(newEventDescription, inputHouseName, currentBookNo);
 
 		    SET output = 0;
 
@@ -486,17 +483,15 @@ def create_event_insert_trigger(client)
 
 				  	SET matchingCharCount = (SELECT COUNT(*)
 				  								FROM Person
-				  								WHERE CharID = NEW.ParticipantID
-				  								      AND Name = NEW.ParticipantName);
+				  								WHERE Name = NEW.ParticipantName);
 
 				  	SET matchingHouseCount = (SELECT COUNT(*)
 				  								FROM House
-				  								WHERE HouseID = NEW.ParticipantID
-				  								AND HouseName = NEW.ParticipantName);
+				  								WHERE HouseName = NEW.ParticipantName);
 
 				  	IF((matchingCharCount != 1 && matchingHouseCount != 1) 
 				  		OR (matchingCharCount > 0 AND matchingHouseCount > 0)) THEN
-				  		SET NEW.ParticipantID = NULL;
+				  		SET NEW.ParticipantName = NULL;
 				  	END IF;
 				  END")
 end
@@ -512,17 +507,15 @@ def create_event_update_trigger(client)
 
 				  	SET matchingCharCount = (SELECT COUNT(*)
 				  								FROM Person
-				  								WHERE CharID = NEW.ParticipantID
-				  								      AND Name = NEW.ParticipantName);
+				  								WHERE Name = NEW.ParticipantName);
 
 				  	SET matchingHouseCount = (SELECT COUNT(*)
 				  								FROM House
-				  								WHERE HouseID = NEW.ParticipantID
-				  								AND HouseName = NEW.ParticipantName);
+				  								WHERE HouseName = NEW.ParticipantName);
 
 				  	IF((matchingCharCount != 1 && matchingHouseCount != 1) 
 				  		OR (matchingCharCount > 0 AND matchingHouseCount > 0)) THEN
-				  		SET NEW.ParticipantID = NULL;
+				  		SET NEW.ParticipantName = NULL;
 				  	END IF;
 				  END")
 end
