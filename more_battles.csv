@@ -1,0 +1,4 @@
+name,year,battle_number,attacker_king,defender_king,attacker_1,attacker_2,attacker_3,attacker_4,defender_1,defender_2,defender_3,defender_4,attacker_outcome,battle_type,major_death,major_capture,attacker_size,defender_size,attacker_commander,defender_commander,summer,location,region,note
+Siege of Winterfell,300,38,Stannis Baratheon,Joffrey/Tommen Baratheon,Baratheon,Karstark,Mormont,Glover,Bolton,Frey,,,,,,,5000,8000,Stannis Baratheon,Roose Bolton,0,Winterfell,The North,
+Another Battle,300,38,Stannis Baratheon,Joffrey/Tommen Baratheon,Baratheon,Karstark,Mormont,Glover,Bolton,Frey,,,,,,,5000,8000,Stannis Baratheon,Roose Bolton,0,Winterfell,The North,
+Battle 3,300,38,Stannis Baratheon,Joffrey/Tommen Baratheon,Baratheon,Karstark,Mormont,Glover,Bolton,Frey,,,,,,,5000,8000,Stannis Baratheon,Roose Bolton,0,Winterfell,The North,

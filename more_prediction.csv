@@ -1,2 +1,11 @@
 S.No,actual,pred,alive,plod,name,title,male,culture,dateOfBirth,DateoFdeath,mother,father,heir,house,spouse,book1,book2,book3,book4,book5,isAliveMother,isAliveFather,isAliveHeir,isAliveSpouse,isMarried,isNoble,age,numDeadRelations,boolDeadRelations,isPopular,popularity,isAlive
 1537,1,0,0.018,0.982,Lancel Lannister,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+1,1,0,0.018,0.982,Guy1,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+2,1,0,0.018,0.982,Guy2,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+3,1,0,0.018,0.982,Guy3,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+4,1,0,0.018,0.982,Guy4,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+5,1,0,0.018,0.982,Guy5,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+6,1,0,0.018,0.982,Guy6,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+7,1,0,0.018,0.982,Guy7,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+8,1,0,0.018,0.982,Guy8,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1
+9,1,0,0.018,0.982,Guy9,Ser,1,,282,,,,,House Lannister of Casterly Rock,Amerei Frey,1,1,1,1,1,,,,1,1,1,23,5,1,1,0.478261,1

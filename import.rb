@@ -1008,27 +1008,30 @@ def add_to_tables(client, people, stats, battles)
 
 			# Obtain the necessary data to insert each attacker into the CombatLog table.
 			attackers.each do |name|
-				if(!defenders.include?(name)) 
+				if(!defenders.include?(name))
+					name = remove_bad_char(name) 
 					houseId = 0
 					returned = client.query("SELECT HouseID
 												FROM House
-												WHERE HouseName = '%s'" % houseName)
+												WHERE HouseName = '%s'" % name)
 
 					returned.each do |val|
 						houseId = val[0]
 						break
 					end
 
-					result = ""
-					if (battle[13] == "win")
-						result = "win"
-					elsif (battle[13] == "loss")
-						result = "loss"
-					else
-						result = "inconclusive"
-					end
-					client.query("INSERT INTO CombatLog()
-		        	VALUES(#{houseId}, #{lastBattleID}, '#{result}')")
+					if houseId != 0
+						result = ""
+						if (battle[13] == "win")
+							result = "win"
+						elsif (battle[13] == "loss")
+							result = "loss"
+						else
+							result = "inconclusive"
+						end
+						client.query("INSERT INTO CombatLog()
+			        	VALUES(#{houseId}, #{lastBattleID}, '#{result}')")
+			        end
 				end
 			end
 
@@ -1036,27 +1039,30 @@ def add_to_tables(client, people, stats, battles)
 			# Obtain the necessary data to insert each defender into the CombatLog table.
 			defenders.each do |name|
 				if(!attackers.include?(name))
+					name = remove_bad_char(name) 
 					houseId = 0
 					result = client.query("SELECT HouseID
 												FROM House
-												WHERE HouseName = '%s'" % houseName)
+												WHERE HouseName = '%s'" % name)
 
 					result.each do |val|
 						houseId = val[0]
 						break
 					end
 
-					result = ""
-					if (battle[13] == "win")
-						result = "loss"
-					elsif (battle[13] == "loss")
-						result = "win"
-					else
-						result = "inconclusive"
-					end
+					if houseId != 0
+						result = ""
+						if (battle[13] == "win")
+							result = "loss"
+						elsif (battle[13] == "loss")
+							result = "win"
+						else
+							result = "inconclusive"
+						end
 
-					client.query("INSERT INTO CombatLog()
-		        	VALUES(#{houseId}, #{lastBattleID}, '#{result}')")
+						client.query("INSERT INTO CombatLog()
+			        	VALUES(#{houseId}, #{lastBattleID}, '#{result}')")
+			        end
 				end
 			end
 		end
@@ -1096,7 +1102,7 @@ else
 				people = currentFile
 			elsif currentFile[0][0] == "S.No"
 				stats = currentFile
-			elsif currentFile[0][1] == "Year"
+			elsif currentFile[0][1] == "year"
 				battles = currentFile
 			else
 				puts "#{file} does not match an expected format and will not be used."
