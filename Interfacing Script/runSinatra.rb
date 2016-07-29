@@ -10,7 +10,7 @@ Mysql2::Client.default_query_options.merge!(:as => :array)
 
 
 get '/' do
-	erb :'home.html', :locals => {'client' => @@client}
+	erb :'home.html'
 end
 
 get '/deathBet' do
@@ -69,6 +69,7 @@ end
 get '/history' do
 	erb :'history.html', :locals => {'client' => @@client}
 end
+
 post '/obtainBetHistory' do
 	require_relative 'views/testEndtoEnd.rb'
 

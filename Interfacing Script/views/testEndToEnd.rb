@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 require 'mysql2'
 
-def remove_bad_char(inputString)
-	if(inputString != nil)
-		return inputString.gsub("'", "''")
+def remove_bad_char(input_string)
+	if(input_string != nil)
+		return input_string.gsub("'", "''")
 	end
 end
 
@@ -93,7 +93,8 @@ end
 def obtain_throne_bet_options(client) 
 	result = client.query("SELECT HouseName, Odds
                                FROM House
-                               WHERE IsOption = 1 ")
+                               WHERE IsOption = 1
+                               		 AND Odds > 0 ")
 	
 	toReturn = [] 
 
@@ -121,22 +122,22 @@ def obtain_resurrect_bet_options(client)
 	return toReturn
 end
 
-def add_death_bet(client, bet_type, bet_option, email, bet_amount, bookNo)
+def add_death_bet(client, bet_type, bet_option, email, bet_amount, book_no)
 
 	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, book_no, email, bet_amount])
 end
 
-def add_throne_bet(client, bet_type, bet_option, email, bet_amount, bookNo) 
+def add_throne_bet(client, bet_type, bet_option, email, bet_amount, book_no) 
 
 	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, book_no, email, bet_amount])
 end
 
-def add_resurrect_bet(client, bet_type, bet_option, email, bet_amount, bookNo) 
+def add_resurrect_bet(client, bet_type, bet_option, email, bet_amount, book_no) 
 
 	client.query("INSERT INTO Bet(OptionName, BetType, BookNo, UserEmail, BetAmount)
-					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, bookNo, email, bet_amount])
+					VALUES('%s','%s', %d, '%s', %.2f)" % [bet_option, bet_type, book_no, email, bet_amount])
 end
 
 def obtain_some_characters_some_data(client)
@@ -223,13 +224,13 @@ def obtain_all_characters_all_data(client)
 	return toReturn
 end
 
-def update_person(client, bookNo, char_name, isAlive, 
-	house_name, title, popularity, deathProb)
+def update_person(client, book_no, char_name, is_alive, 
+	house_name, title, popularity, death_prob)
 
 	char_name = remove_bad_char(char_name)
 	house_name = remove_bad_char(house_name)
 	title = remove_bad_char(title)
-	client.query("CALL log_and_update_person('%s', '%s', '%s', %d, %.3f, %.6f, %d, @output_value)" % [char_name, house_name, title, isAlive, deathProb, popularity, bookNo])
+	client.query("CALL log_and_update_person('%s', '%s', '%s', %d, %.3f, %.6f, %d, @output_value)" % [char_name, house_name, title, is_alive, death_prob, popularity, book_no])
 end
 
 def obtain_houses_and_data(client)
@@ -245,10 +246,9 @@ def obtain_houses_and_data(client)
 	return toReturn
 end
 
-def update_house(client, bookNo, house_name, wonThrone)
-
+def update_house(client, book_no, house_name, wonThrone)
 	house_name = remove_bad_char(house_name)
-	client.query("CALL log_and_update_house('%s', %d, %d, @output_value)" % [house_name, wonThrone, bookNo])
+	client.query("CALL log_and_update_house('%s', %d, %d, @output_value)" % [house_name, wonThrone, book_no])
 end
 
 def obtainWinsData(client)
